@@ -1,0 +1,72 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { getProductBySlug } from "@/lib/catalog";
+import { ProductConfigurator } from "@/components/product/product-configurator";
+import { Container } from "@/components/ui";
+
+export const dynamic = "force-dynamic";
+
+type Params = { params: Promise<{ slug: string }> };
+
+export async function generateMetadata({ params }: Params): Promise<Metadata> {
+  const { slug } = await params;
+  const product = await getProductBySlug(slug);
+  return product ? { title: product.name, description: product.tagline } : { title: "Product not found" };
+}
+
+export default async function ProductPage({ params }: Params) {
+  const { slug } = await params;
+  const product = await getProductBySlug(slug);
+  if (!product) notFound();
+
+  return (
+    <Container wide className="py-6 sm:py-8">
+      <nav aria-label="Breadcrumb" className="text-sm text-ink-soft">
+        <ol className="flex flex-wrap items-center gap-1.5">
+          <li>
+            <Link href="/shop" className="underline-offset-4 hover:text-ink hover:underline">
+              Shop
+            </Link>
+          </li>
+          <li aria-hidden="true">/</li>
+          <li>
+            <Link
+              href={`/shop?category=${product.category.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
+              className="underline-offset-4 hover:text-ink hover:underline"
+            >
+              {product.category}
+            </Link>
+          </li>
+          <li aria-hidden="true">/</li>
+          <li aria-current="page" className="truncate text-ink">
+            {product.name}
+          </li>
+        </ol>
+      </nav>
+
+      <ProductConfigurator product={product} />
+
+      <section aria-labelledby="about-heading" className="mt-16 grid gap-10 border-t border-line pt-12 lg:grid-cols-[1.4fr_1fr]">
+        <div>
+          <h2 id="about-heading" className="font-display text-2xl font-semibold">
+            About this piece
+          </h2>
+          <p className="mt-4 max-w-prose leading-relaxed text-ink-soft">{product.description}</p>
+          <p className="mt-6 text-sm italic text-moss">{product.maker}</p>
+        </div>
+        <div className="rounded-2xl border border-line bg-card p-6">
+          <h2 className="font-display text-lg font-semibold">Materials &amp; care</h2>
+          <ul className="mt-3 space-y-2 text-sm text-ink-soft">
+            {product.details.map((d) => (
+              <li key={d} className="flex gap-2">
+                <span aria-hidden="true" className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-clay" />
+                {d}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    </Container>
+  );
+}

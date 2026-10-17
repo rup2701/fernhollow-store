@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+@theme {
+  --color-paper: #f7f2ea;
+  --color-paper-deep: #efe6d8;
+  --color-card: #fffcf7;
+  --color-ink: #2b2420;
+  --color-ink-soft: #5c514a;
+  --color-line: #e2d6c4;
+  --color-clay: #a2471f;
+  --color-clay-deep: #87391a;
+  --color-moss: #4f5d3a;
+  --color-moss-soft: #e4e8d8;
+  --color-danger: #a1261b;
+  --color-danger-soft: #fbe9e5;
+
+  --font-display: "Fraunces Variable", Georgia, "Times New Roman", serif;
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--color-paper);
+  overflow-x: hidden;
+}
+
+/* One consistent, highly visible focus ring for every interactive element. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 3px solid var(--color-clay);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Subtle paper grain over the page background. */
+.grain {
+  background-image: radial-gradient(rgba(43, 36, 32, 0.045) 1px, transparent 1px);
+  background-size: 6px 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animate-rise {
+  animation: rise 0.25s ease-out;
+}

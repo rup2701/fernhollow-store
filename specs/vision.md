@@ -49,6 +49,7 @@ The application should include:
 - A site footer and subfooter with help, contact and accepted-payment information, plus Help and Contact pages. *(CR-002)*
 - Browsing pages (home, catalog, product, header, footer) use the full screen width. *(CR-003)*
 - Product cards put the image first, with minimal frame, padding and text. *(CR-004)*
+- A row of four reassurances (makers, returns, shipping, contact) sits at the bottom of the home page, just above the footer. *(CR-005)*
 
 ## Constraints and Assumptions
 
@@ -86,5 +87,8 @@ The product model is the reference specification against which the generated app
 | CR-002 | "Add a subfooter with payment types accepted and contact us and help links" | vision.md (scope), requirements.json (`site-footer`), experience.json (global `footer`, `help` and `contact` pages) |
 | CR-003 | "Online stores should occupy full width" | vision.md (scope), requirements.json (`full-width-layout`), experience.json (`design_intent.layout`) |
 | CR-004 | "Cards should maximize for image over whitespace" | vision.md (scope), requirements.json (`image-first-cards`), experience.json (`design_intent.layout`) |
+| CR-005 | "Just above the footer, add a similar section on the home page" (four-column icon strip from a reference store) | vision.md (scope), requirements.json (`home-trust-strip`), experience.json (`home` content) |
+
+Note on CR-005: the reference strip made claims about a different business (years trading, customer counts). Only terms this store actually has are used: named makers, the 30-day returns policy, free shipping over $75 (a flat $6 below it, labelled as a demo estimate) and a two-business-day reply. The numbers are read from the same settings checkout uses.
 
 Note on CR-002: the vision says checkout is simulated and no payment is collected. Accepted payment methods are therefore shown as the methods planned for launch, labelled as demo information, as text only (no card-brand artwork).

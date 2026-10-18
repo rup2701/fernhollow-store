@@ -226,6 +226,28 @@
         "Measure the gap between cards.",
         "Tab through the catalog and confirm one stop per card."
       ]
+    },
+    {
+      "id": "home-trust-strip",
+      "name": "Home page reassurance strip above the footer",
+      "priority": "should-have",
+      "status": "approved",
+      "change_request": "CR-005: Just above the footer, add a similar section on the home page",
+      "description": "The last section of the home page is a row of four reassurances, each with an icon, a short heading and one or two lines: named makers, returns, shipping and contact. It uses only terms this store really has, and its numbers are read from the same settings checkout uses.",
+      "acceptance_criteria": [
+        "The strip is the last section on the home page, directly above the footer.",
+        "It shows four items, each with an icon, a heading and a short description.",
+        "The returns item states the 30-day window and links to the returns page.",
+        "The shipping item states the free-shipping threshold and the flat rate below it, labelled as a demo estimate, and the values match checkout.",
+        "The contact item states the two-business-day reply time and links to the contact page.",
+        "Four across on wide screens, two across on tablets, one column on phones, with no horizontal overflow at 375 px.",
+        "Icons are decorative (hidden from assistive technology) and no claim is made about years trading or customer counts."
+      ],
+      "verification": [
+        "Scroll to the bottom of the home page and count the items.",
+        "Compare the shipping and returns wording with the Help page and checkout totals.",
+        "Resize to 1440, 700 and 390 px."
+      ]
     }
   ],
   "out_of_scope": [

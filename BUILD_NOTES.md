@@ -109,3 +109,7 @@ keeps its drawing. Known limits of the photo path, each a candidate edge for the
 - The live personalization preview is a caption on the image (`Preview: "text"`), not text drawn on the product.
 - Product pages offer a full shot and a close-up (zoom); the "on the table" scene only exists for drawings.
 - Sources, licences and match confidence are in `IMAGE_CREDITS.md`. The photos are unlicensed and for private demo use only.
+
+## CR-005: reassurance strip above the footer
+
+`src/components/trust-strip.tsx`, rendered last on the home page. Four items (named makers, 30-day returns, free shipping over $75, reply within two business days). The shipping numbers are read from `src/lib/pricing.ts`, the same settings checkout uses, so they cannot drift. The reference image claimed years trading and customer counts; those were deliberately not copied because this store has no such facts. `-mb-24` on the section cancels the footer's own top margin on this page only. Seven checks added to `e2e/layout.mjs` (suite now 21).

@@ -104,6 +104,35 @@ for (const path of ["/", "/shop", "/shop/striped-linen-tea-towels", "/cart", "/r
   await c2?.close();
 }
 
+// CR-005: reassurance strip just above the footer on the home page
+{
+  const { ctx, page } = await open(1440, "/");
+  const strip = page.locator("[data-testid=trust-strip]");
+  check("CR-005 home shows four reassurances above the footer", (await strip.locator("> li").count()) === 4);
+  const pos = await page.evaluate(() => {
+    const s = document.querySelector("[data-testid=trust-strip]").closest("section").getBoundingClientRect();
+    const f = document.querySelector("footer").getBoundingClientRect();
+    const lastSection = document.querySelector("main").lastElementChild;
+    return { gap: Math.round(f.top - s.bottom), isLast: lastSection.contains(document.querySelector("[data-testid=trust-strip]")) };
+  });
+  check("CR-005 strip is the last section on the page, directly above the footer", pos.isLast && pos.gap >= 0 && pos.gap < 4, JSON.stringify(pos));
+  const text = await strip.innerText();
+  check("CR-005 copy matches store terms (30 days, free over $75, $6 flat, 3–5 days, two business days)", /30-day returns/.test(text) && /over \$75/.test(text) && /\$6\b/.test(text) && /3–5 business days/.test(text) && /two business days/.test(text), text.replace(/\s+/g, " ").slice(0, 120));
+  check("CR-005 shipping line is labelled as a demo estimate", /demo estimate/.test(text));
+  check("CR-005 links lead to the returns and contact pages", (await strip.locator("a[href='/returns']").count()) === 1 && (await strip.locator("a[href='/contact']").count()) === 1);
+  const cols1440 = await page.evaluate(() => new Set([...document.querySelectorAll("[data-testid=trust-strip] > li")].map((li) => Math.round(li.getBoundingClientRect().top))).size);
+  check("CR-005 four across on a wide screen", cols1440 === 1, `${cols1440} row(s)`);
+  await page.screenshot({ path: "e2e/screenshots/home-trust-strip-1440.png", fullPage: true });
+  await ctx.close();
+}
+{
+  const { ctx, page } = await open(390, "/");
+  const rows = await page.evaluate(() => new Set([...document.querySelectorAll("[data-testid=trust-strip] > li")].map((li) => Math.round(li.getBoundingClientRect().top))).size);
+  const over = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  check("CR-005 stacks to one column on a phone with no overflow", rows === 4 && over <= 0, `${rows} rows, ${over}px overflow`);
+  await ctx.close();
+}
+
 await browser.close();
 const failed = results.filter((r) => !r).length;
 console.log(`\n${results.length - failed}/${results.length} checks passed`);

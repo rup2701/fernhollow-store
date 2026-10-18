@@ -38,7 +38,8 @@
         "A concise introduction to the handmade products",
         "An inviting visual introduction to the products or craftsmanship",
         "A selection of featured products",
-        "A clear path to browse the catalog"
+        "A clear path to browse the catalog",
+        "A row of four reassurances just above the footer: named makers, returns, shipping, contact (CR-005)"
       ],
       "primary_action": "Browse products",
       "success_criteria": [

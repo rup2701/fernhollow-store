@@ -3,6 +3,7 @@ import { getCatalog, getCategories } from "@/lib/catalog";
 import { ProductCard } from "@/components/product-card";
 import { ProductArt } from "@/components/product-art";
 import { Container, buttonStyles } from "@/components/ui";
+import { TrustStrip } from "@/components/trust-strip";
 
 export const dynamic = "force-dynamic";
 
@@ -116,6 +117,9 @@ export default async function HomePage() {
           </div>
         </Container>
       </section>
+
+      {/* Reassurances, just above the footer (CR-005) */}
+      <TrustStrip />
     </>
   );
 }

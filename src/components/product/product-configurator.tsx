@@ -32,6 +32,8 @@ export function ProductConfigurator({ product }: { product: ProductDetail }) {
   const { addLine, itemCount, lines } = useCart();
   const announce = useAnnounce();
   const uid = useId();
+  // A photo has no "on the table" scene, so only the full shot and a close-up are offered.
+  const views = product.art.photo ? VIEWS.filter((v) => v.id !== "lifestyle") : VIEWS;
 
   // Options with a single value need no decision, so they're preselected.
   const [selections, setSelections] = useState<Selections>(() => {
@@ -146,12 +148,13 @@ export function ProductConfigurator({ product }: { product: ProductDetail }) {
             color={color}
             personalization={personalization}
             view={view}
-            label={`${VIEWS.find((v) => v.id === view)?.label} of the ${product.name}${colorLabel ? ` in ${colorLabel}` : ""}`}
+            label={`${VIEWS.find((v) => v.id === view)?.label} of the ${product.name}${colorLabel && !product.art.photo ? ` in ${colorLabel}` : ""}`}
             className="aspect-square w-full"
+            showPreview={view === "hero"}
           />
         </div>
-        <div className="mt-3 grid grid-cols-3 gap-3" role="group" aria-label="Product images">
-          {VIEWS.map((v) => (
+        <div className={`mt-3 grid gap-3 ${views.length === 2 ? "grid-cols-2 sm:max-w-[66%]" : "grid-cols-3"}`} role="group" aria-label="Product images">
+          {views.map((v) => (
             <button
               key={v.id}
               type="button"

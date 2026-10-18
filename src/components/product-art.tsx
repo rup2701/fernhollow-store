@@ -19,6 +19,8 @@ type Props = {
   /** Accessible description. Pass "" for decorative use. */
   label: string;
   className?: string;
+  /** Photos can't be redrawn with the shopper's text, so show it as a caption on the image. */
+  showPreview?: boolean;
 };
 
 function shade(hex: string, amount: number): string {
@@ -48,12 +50,34 @@ const VIEWBOX: Record<ArtView, string> = {
   detail: "95 105 210 210",
 };
 
-export function ProductArt({ art, color, personalization, view = "hero", label, className }: Props) {
+export function ProductArt({ art, color, personalization, view = "hero", label, className, showPreview = false }: Props) {
   const uid = useId().replace(/:/g, "");
   const c = color ?? art.primary;
   const a = art.accent;
   const text = personalization?.trim() || null;
   const decorative = label === "";
+
+  // A real photo replaces the drawing. Colour swatches don't recolour a photo.
+  if (art.photo) {
+    return (
+      <div className={`relative overflow-hidden ${className ?? ""}`} style={{ backgroundColor: art.backdrop }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={art.photo}
+          alt={decorative ? "" : label || art.photoAlt || ""}
+          loading="lazy"
+          decoding="async"
+          className="h-full w-full object-cover"
+          style={view === "detail" ? { transform: "scale(1.8)" } : undefined}
+        />
+        {showPreview && text ? (
+          <span className="absolute bottom-3 left-3 max-w-[85%] truncate rounded-md bg-ink/75 px-2.5 py-1 text-xs font-medium text-paper">
+            Preview: “{text}”
+          </span>
+        ) : null}
+      </div>
+    );
+  }
 
   return (
     <svg

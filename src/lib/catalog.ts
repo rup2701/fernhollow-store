@@ -2,6 +2,7 @@ import "server-only";
 import { and, asc, eq, inArray } from "drizzle-orm";
 import { db, schema } from "@/db";
 import type { PersonalizationRule, ProductArt } from "@/db/schema";
+import { withPhoto } from "@/lib/product-photos";
 
 export type CatalogProduct = {
   id: number;
@@ -92,7 +93,7 @@ export async function getCatalog(opts: { categorySlug?: string; featuredOnly?: b
       basePriceCents: p.basePriceCents,
       fromPriceCents: p.basePriceCents + min,
       hasPriceRange: max !== min,
-      art: p.art,
+      art: withPhoto(p.slug, p.art),
       personalizable: p.personalization !== null,
     };
   });
@@ -139,7 +140,7 @@ async function loadDetail(p: typeof schema.products.$inferSelect): Promise<Produ
     maker: p.maker,
     basePriceCents: p.basePriceCents,
     isAvailable: p.isAvailable,
-    art: p.art,
+    art: withPhoto(p.slug, p.art),
     personalization: p.personalization ?? null,
     options: options.map((o) => ({
       id: o.id,

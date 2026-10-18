@@ -42,6 +42,10 @@ export type ProductArt = {
   accent: string;
   /** Background tint for the product card. */
   backdrop: string;
+  /** Real product photo (path under /public). When set it replaces the illustration. */
+  photo?: string;
+  /** Alt text for the photo. */
+  photoAlt?: string;
 };
 
 export type PersonalizationRule = {

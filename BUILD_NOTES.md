@@ -98,3 +98,14 @@ A fifth spec file listing the things that go wrong or get awkward in an online s
 - **Found while writing it:** adding an 11th item to a cart that held 10 was silently ignored while the page said "Added to your cart" (E-007). Fixed, with checks in `e2e/edges.mjs`. Without the fix the check stalls waiting for an explanation that never appears.
 - **Left open for the owner to decide** (each has a plain-language `owner_decision`): stock counting (E-023), reseeding wiping the catalog (E-024), seeing and managing orders (E-026), order emails (E-027), cancellations and refunds (E-028).
 - **Partial** (the app copes but nobody is told): owner never hears about failed checkouts or an unreachable database (E-019, E-025); shoppers in private mode aren't told their cart won't be saved (E-010); the cart shows stale prices until checkout (E-012).
+
+## Product photos (interim)
+
+Ten products now show real photos instead of drawn illustrations. Photos are mapped by slug in
+`src/lib/product-photos.ts` (no database change, so no reseed on deploy); a product with no entry
+keeps its drawing. Known limits of the photo path, each a candidate edge for the register:
+
+- Colour and glaze swatches no longer recolour the image, so a shopper can pick a colour the photo does not show.
+- The live personalization preview is a caption on the image (`Preview: "text"`), not text drawn on the product.
+- Product pages offer a full shot and a close-up (zoom); the "on the table" scene only exists for drawings.
+- Sources, licences and match confidence are in `IMAGE_CREDITS.md`. The photos are unlicensed and for private demo use only.

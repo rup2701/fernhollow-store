@@ -73,7 +73,8 @@ for (const path of ["/", "/shop", "/shop/striped-linen-tea-towels", "/cart", "/r
   const m = await page.evaluate(() => {
     const cards = [...document.querySelectorAll("main ul li article")];
     const a = cards[0];
-    const img = a.querySelector("svg").parentElement;
+    // The card's picture area is the first child of the card, whether it holds a photo or a drawing.
+    const img = a.querySelector("img, svg").closest("article > div");
     const ar = a.getBoundingClientRect();
     const ir = img.getBoundingClientRect();
     const cs = getComputedStyle(img);

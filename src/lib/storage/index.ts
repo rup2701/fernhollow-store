@@ -4,7 +4,8 @@ import path from "node:path";
 
 /**
  * Photo storage behind a small adapter.
- *  - Deployed stores use Vercel Blob (set BLOB_READ_WRITE_TOKEN).
+ *  - Deployed stores use Vercel Blob. Vercel sets either BLOB_READ_WRITE_TOKEN (older stores) or
+ *    BLOB_STORE_ID (newer stores, authorized automatically on each deployment).
  *  - Development uses local disk (.uploads/), served at /media/<key>.
  * A deployed build never writes uploads to the server's own filesystem.
  */
@@ -58,12 +59,12 @@ function isDeployedBuild() {
 export type StorageStatus = { ok: true; storage: PhotoStorage } | { ok: false; message: string };
 
 export function getStorage(): StorageStatus {
-  if (process.env.BLOB_READ_WRITE_TOKEN) return { ok: true, storage: blobStorage };
+  if (process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID) return { ok: true, storage: blobStorage };
   if (!isDeployedBuild()) return { ok: true, storage: localStorage };
   return {
     ok: false,
     message:
-      "Photo storage isn't set up yet, so photos can't be uploaded. Add a Vercel Blob store to this project (it provides BLOB_READ_WRITE_TOKEN), redeploy, then try again.",
+      "Photo storage isn't set up yet, so photos can't be uploaded. Add a Vercel Blob store to this project (it provides BLOB_READ_WRITE_TOKEN or BLOB_STORE_ID), redeploy, then try again.",
   };
 }
 

@@ -50,15 +50,16 @@ The application should include:
 - Browsing pages (home, catalog, product, header, footer) use the full screen width. *(CR-003)*
 - Product cards put the image first, with minimal frame, padding and text. *(CR-004)*
 - A row of four reassurances (makers, returns, shipping, contact) sits at the bottom of the home page, just above the footer. *(CR-005)*
+- A private owner area where the owner signs in, manages products, photos, stock, publishing and categories. *(CR-006)*
 
 ## Constraints and Assumptions
 
 - Use an original store name, visual identity, copy, and product data.
 - Do not copy Etsy's branding, proprietary assets, or exact page designs.
-- This is a front-end demonstration, not a production commerce system.
+- This is a real store with a database and an owner area. Checkout is still simulated, so it is not yet a full production commerce system.
 - Checkout must be explicitly simulated. Do not collect or transmit real payment information.
-- Authentication, seller dashboards, real payment processing, shipping-rate integrations, tax services, and fulfillment integrations are out of scope.
-- Static or local product data is acceptable.
+- Shopper accounts, real payment processing, shipping-rate integrations, tax services, and fulfillment integrations are out of scope. The store has one owner sign-in for the owner area.
+- Products, categories and photos live in the database and storage, and the owner manages them in the owner area.
 - Cart state should persist while navigating between pages. Browser-local persistence is acceptable.
 - Prices are represented in USD.
 - Any shipping or tax amounts shown must be clearly identified as estimates or demo values.
@@ -88,6 +89,7 @@ The product model is the reference specification against which the generated app
 | CR-003 | "Online stores should occupy full width" | vision.md (scope), requirements.json (`full-width-layout`), experience.json (`design_intent.layout`) |
 | CR-004 | "Cards should maximize for image over whitespace" | vision.md (scope), requirements.json (`image-first-cards`), experience.json (`design_intent.layout`) |
 | CR-005 | "Just above the footer, add a similar section on the home page" (four-column icon strip from a reference store) | vision.md (scope), requirements.json (`home-trust-strip`), experience.json (`home` content) |
+| CR-006 | "Add the owner area: sign-in, inventory management, a new-product page, photo upload, publish and stock, categories" | vision.md (scope, constraints), requirements.json (`owner-*`), experience.json (`admin-*` pages, `owner-adds-product`), domain-model.json (Category, ProductImage, Owner, Product), edges.json (E-029 to E-036) |
 
 Note on CR-005: the reference strip made claims about a different business (years trading, customer counts). Only terms this store actually has are used: named makers, the 30-day returns policy, free shipping over $75 (a flat $6 below it, labelled as a demo estimate) and a two-business-day reply. The numbers are read from the same settings checkout uses.
 

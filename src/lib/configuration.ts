@@ -11,6 +11,8 @@ export type ConfigurableProduct = {
   options: {
     id: number;
     name: string;
+    /** Missing means required. An optional option left unchosen uses 0 in the variant key. */
+    required?: boolean;
     values: { id: number; label: string; priceDeltaCents: number; swatch: string | null }[];
   }[];
   variants: { key: string; isAvailable: boolean }[];
@@ -23,14 +25,20 @@ export function variantKey(product: ConfigurableProduct, selections: Selections)
   const ids: number[] = [];
   for (const option of product.options) {
     const valueId = selections[option.id];
-    if (valueId === undefined) return null;
+    if (valueId === undefined) {
+      if (option.required === false) {
+        ids.push(0);
+        continue;
+      }
+      return null;
+    }
     ids.push(valueId);
   }
   return ids.join(".");
 }
 
 export function missingOptions(product: ConfigurableProduct, selections: Selections): string[] {
-  return product.options.filter((o) => selections[o.id] === undefined).map((o) => o.name);
+  return product.options.filter((o) => o.required !== false && selections[o.id] === undefined).map((o) => o.name);
 }
 
 export function priceFor(product: ConfigurableProduct, selections: Selections): number {

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getCatalog, getCategories } from "@/lib/catalog";
+import { redirect } from "next/navigation";
+import { currentSlugForOld, getCatalog, getCategories } from "@/lib/catalog";
 import { ProductCard } from "@/components/product-card";
 import { Container, EmptyState } from "@/components/ui";
 
@@ -13,6 +14,11 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
 
   const categories = await getCategories();
   const active = requested ? categories.find((c) => c.slug === requested) : undefined;
+  if (requested && !active) {
+    // A renamed category keeps its old links working.
+    const current = await currentSlugForOld(requested);
+    if (current) redirect(`/shop?category=${current}`);
+  }
   const products = requested ? (active ? await getCatalog({ categorySlug: active.slug }) : []) : await getCatalog();
 
   return (

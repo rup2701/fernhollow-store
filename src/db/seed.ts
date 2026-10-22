@@ -245,6 +245,14 @@ async function main() {
   const pool = new Pool({ connectionString: url });
   const db = drizzle(pool, { schema });
 
+  // The owner area lets the owner add products and photos. Never wipe that by accident.
+  const [{ n }] = (await pool.query("select count(*)::int as n from product_images")).rows;
+  if (n > 0 && !process.argv.includes("--force")) {
+    await pool.end();
+    console.error(`Refusing to reseed: ${n} owner-uploaded photo(s) would be deleted. Run "npm run db:seed -- --force" to reset the whole catalog anyway.`);
+    process.exit(1);
+  }
+
   await db.transaction(async (tx) => {
     // Reset catalog data. Orders keep their own snapshots, so they survive a reseed.
     await tx.delete(schema.variants);
@@ -252,6 +260,12 @@ async function main() {
     await tx.delete(schema.productOptions);
     await tx.update(schema.orderItems).set({ productId: null });
     await tx.delete(schema.products);
+    await tx.delete(schema.categories);
+
+    const categoryNames = [...new Set(catalog.map((p) => p.category))].sort();
+    await tx.insert(schema.categories).values(
+      categoryNames.map((name, position) => ({ name, slug: name.toLowerCase().replace(/[^a-z0-9]+/g, "-"), position })),
+    );
 
     for (const [index, p] of catalog.entries()) {
       const [product] = await tx
@@ -265,6 +279,7 @@ async function main() {
           category: p.category,
           basePriceCents: p.basePriceCents,
           isAvailable: p.isAvailable ?? true,
+          stock: 25,
           isFeatured: p.isFeatured ?? false,
           personalization: p.personalization ?? null,
           art: p.art,

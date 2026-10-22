@@ -35,12 +35,18 @@ export function ProductConfigurator({ product }: { product: ProductDetail }) {
   // A photo has no "on the table" scene, so only the full shot and a close-up are offered.
   const views = product.art.photo ? VIEWS.filter((v) => v.id !== "lifestyle") : VIEWS;
 
-  // Options with a single value need no decision, so they're preselected.
+  // The owner's default is preselected. A required option with a single value needs no decision, so it is too.
   const [selections, setSelections] = useState<Selections>(() => {
     const initial: Selections = {};
-    for (const o of product.options) if (o.values.length === 1) initial[o.id] = o.values[0].id;
+    for (const o of product.options) {
+      if (o.defaultValueId && o.values.some((v) => v.id === o.defaultValueId)) initial[o.id] = o.defaultValueId;
+      else if (o.required && o.values.length === 1) initial[o.id] = o.values[0].id;
+    }
     return initial;
   });
+  const [imageIndex, setImageIndex] = useState(0);
+  const hasImages = product.images.length > 0;
+  const soldOut = product.stock <= 0;
   const [personalization, setPersonalization] = useState("");
   const [errors, setErrors] = useState<Errors>({ options: {} });
   const [view, setView] = useState<ArtView>("hero");
@@ -51,7 +57,7 @@ export function ProductConfigurator({ product }: { product: ProductDetail }) {
   const missing = missingOptions(product, selections);
   const complete = missing.length === 0;
   const available = complete && isConfigurationAvailable(product, selections);
-  const anyAvailable = product.isAvailable && product.variants.some((v) => v.isAvailable);
+  const anyAvailable = product.isAvailable && !soldOut && product.variants.some((v) => v.isAvailable);
   const chosen = describeSelections(product, selections);
   const color = artColorFor(product, selections);
   const colorLabel = chosen.find((c) => product.options.find((o) => o.id === c.optionId)?.values.find((v) => v.id === c.valueId)?.swatch)?.value;
@@ -80,11 +86,16 @@ export function ProductConfigurator({ product }: { product: ProductDetail }) {
     setAdded(null);
   }
 
+  function clear(optionId: number) {
+    setSelections((s) => ({ ...s, [optionId]: undefined }));
+    setAdded(null);
+  }
+
   function handleAdd() {
     const nextErrors: Errors = { options: {} };
 
     for (const o of product.options) {
-      if (selections[o.id] === undefined) nextErrors.options[o.id] = `Choose a ${o.name.toLowerCase()}.`;
+      if (o.required && selections[o.id] === undefined) nextErrors.options[o.id] = `Choose a ${o.name.toLowerCase()}.`;
     }
     const personalizationError = product.personalization ? validatePersonalization(personalization, product.personalization) : null;
     if (personalizationError) nextErrors.personalization = personalizationError;
@@ -142,6 +153,32 @@ export function ProductConfigurator({ product }: { product: ProductDetail }) {
     <div className="mt-6 grid gap-8 lg:grid-cols-[1.3fr_1fr] lg:gap-12">
       {/* Gallery */}
       <div>
+        {hasImages ? (
+          <>
+            <div className="overflow-hidden rounded-3xl border border-line bg-card">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={product.images[imageIndex].url} alt={product.images[imageIndex].alt} className="aspect-square w-full object-cover" />
+            </div>
+            {product.images.length > 1 ? (
+              <div className="mt-3 grid grid-cols-4 gap-3 sm:grid-cols-5" role="group" aria-label="Product images">
+                {product.images.map((img, i) => (
+                  <button
+                    key={img.id}
+                    type="button"
+                    onClick={() => setImageIndex(i)}
+                    aria-pressed={imageIndex === i}
+                    aria-label={`Show photo ${i + 1} of ${product.images.length}`}
+                    className={`overflow-hidden rounded-xl border-2 transition-colors ${imageIndex === i ? "border-ink" : "border-transparent hover:border-line"}`}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={img.url} alt="" className="aspect-square w-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </>
+        ) : (
+        <>
         <div className="overflow-hidden rounded-3xl border border-line bg-card">
           <ProductArt
             art={product.art}
@@ -167,6 +204,8 @@ export function ProductConfigurator({ product }: { product: ProductDetail }) {
             </button>
           ))}
         </div>
+        </>
+        )}
       </div>
 
       {/* Details & configuration */}
@@ -180,9 +219,17 @@ export function ProductConfigurator({ product }: { product: ProductDetail }) {
           {formatMoney(price)}
         </p>
 
-        <Availability productAvailable={product.isAvailable} anyAvailable={anyAvailable} complete={complete} available={available} />
+        <Availability productAvailable={product.isAvailable} soldOut={soldOut} anyAvailable={anyAvailable} complete={complete} available={available} />
 
-        {!product.isAvailable ? (
+        {soldOut && product.isAvailable ? (
+          <div className="mt-8 rounded-2xl border border-line bg-card p-6">
+            <p className="font-semibold">Sold out</p>
+            <p className="mt-1 text-sm text-ink-soft">This piece has sold through. New pieces come out of the studio most weeks.</p>
+            <Link href="/shop" className={`${buttonStyles.secondary} mt-4`}>
+              Browse the shop
+            </Link>
+          </div>
+        ) : !product.isAvailable ? (
           <div className="mt-8 rounded-2xl border border-line bg-card p-6">
             <p className="font-semibold">This piece isn&apos;t available right now.</p>
             <p className="mt-1 text-sm text-ink-soft">It&apos;s out of season. Take a look at what&apos;s in the shop today.</p>
@@ -215,8 +262,13 @@ export function ProductConfigurator({ product }: { product: ProductDetail }) {
                   <legend className="text-sm font-semibold">
                     {option.name}
                     <span className="font-normal text-ink-soft">
-                      {selectedValue ? `: ${selectedValue.label}` : " (required)"}
+                      {selectedValue ? `: ${selectedValue.label}` : option.required ? " (required)" : " (optional)"}
                     </span>
+                    {!option.required && selectedValue ? (
+                      <button type="button" onClick={() => clear(option.id)} className="ml-2 text-sm font-medium text-clay underline underline-offset-4">
+                        Clear
+                      </button>
+                    ) : null}
                   </legend>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {option.values.map((value) => {
@@ -326,18 +378,23 @@ export function ProductConfigurator({ product }: { product: ProductDetail }) {
 
 function Availability({
   productAvailable,
+  soldOut,
   anyAvailable,
   complete,
   available,
 }: {
   productAvailable: boolean;
+  soldOut: boolean;
   anyAvailable: boolean;
   complete: boolean;
   available: boolean;
 }) {
   let tone: "ok" | "out" = "ok";
   let text = "In stock · ships in 3–5 days";
-  if (!productAvailable || !anyAvailable) {
+  if (productAvailable && soldOut) {
+    tone = "out";
+    text = "Sold out";
+  } else if (!productAvailable || !anyAvailable) {
     tone = "out";
     text = "Currently unavailable";
   } else if (complete && !available) {

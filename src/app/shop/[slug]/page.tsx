@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getProductBySlug } from "@/lib/catalog";
+import { isOwner } from "@/lib/owner-auth";
 import { ProductConfigurator } from "@/components/product/product-configurator";
 import { Container } from "@/components/ui";
 
@@ -12,16 +13,26 @@ type Params = { params: Promise<{ slug: string }> };
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
   const product = await getProductBySlug(slug);
-  return product ? { title: product.name, description: product.tagline } : { title: "Product not found" };
+  return product && (product.isAvailable || (await isOwner())) ? { title: product.name, description: product.tagline } : { title: "Product not found" };
 }
 
 export default async function ProductPage({ params }: Params) {
   const { slug } = await params;
   const product = await getProductBySlug(slug);
-  if (!product) notFound();
+  const owner = await isOwner();
+  // A draft looks like any other missing page to shoppers. Only the owner can preview it.
+  if (!product || (!product.isAvailable && !owner)) notFound();
 
   return (
     <Container wide className="py-6 sm:py-8">
+      {!product.isAvailable ? (
+        <p role="status" className="mb-4 rounded-xl border border-clay/30 bg-paper-deep px-4 py-3 text-sm font-medium">
+          Draft preview. Only you can see this page.{" "}
+          <Link href={`/admin/products`} className="text-clay underline underline-offset-4">
+            Back to the owner area
+          </Link>
+        </p>
+      ) : null}
       <nav aria-label="Breadcrumb" className="text-sm text-ink-soft">
         <ol className="flex flex-wrap items-center gap-1.5">
           <li>
@@ -32,7 +43,7 @@ export default async function ProductPage({ params }: Params) {
           <li aria-hidden="true">/</li>
           <li>
             <Link
-              href={`/shop?category=${product.category.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
+              href={`/shop?category=${product.categorySlug}`}
               className="underline-offset-4 hover:text-ink hover:underline"
             >
               {product.category}

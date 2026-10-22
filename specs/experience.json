@@ -225,6 +225,108 @@
         "Contact details are easy to copy.",
         "No form submits or transmits data."
       ]
+    },
+    {
+      "id": "admin-sign-in",
+      "audience": "owner",
+      "purpose": "Let the owner into the owner area.",
+      "content": [
+        "Store name and a short 'Owner sign-in' heading",
+        "Email and password fields",
+        "A sign-in button",
+        "A way back to the store"
+      ],
+      "interactions": [
+        "Enter credentials and submit.",
+        "Correct a wrong entry."
+      ],
+      "states": [
+        "Ready",
+        "Wrong credentials",
+        "Too many attempts",
+        "Signing in"
+      ],
+      "success_criteria": [
+        "Wrong credentials never reveal which part was wrong.",
+        "After signing in the owner lands on the product list."
+      ]
+    },
+    {
+      "id": "admin-products",
+      "audience": "owner",
+      "purpose": "Show every product and what needs attention.",
+      "content": [
+        "Heading with the product count",
+        "Add product button",
+        "Search, category filter and status filter",
+        "A row per product: cover photo, name, category, price, stock, status",
+        "A next-step hint when something needs attention (drafts, sold out)"
+      ],
+      "interactions": [
+        "Search and filter.",
+        "Open a product.",
+        "Add a product."
+      ],
+      "states": [
+        "Products listed",
+        "No results for a filter",
+        "Empty store: add your first product"
+      ],
+      "success_criteria": [
+        "The owner can find any product in a few seconds.",
+        "Drafts and sold-out items are easy to spot."
+      ]
+    },
+    {
+      "id": "admin-product-edit",
+      "audience": "owner",
+      "purpose": "Create or change one product.",
+      "content": [
+        "Heading showing 'New product' or the product name, with its status",
+        "Fields: name, slug, description, price, category, stock",
+        "Options editor with required and default per option",
+        "Photo area: upload, reorder, cover, alt text, remove",
+        "Save, Publish or Unpublish, and Cancel"
+      ],
+      "interactions": [
+        "Fill and save the form.",
+        "Upload, reorder and remove photos.",
+        "Publish or unpublish."
+      ],
+      "states": [
+        "New product",
+        "Editing",
+        "Validation errors",
+        "Saving",
+        "Saved with next step shown",
+        "Upload in progress or failed",
+        "Unsaved changes"
+      ],
+      "success_criteria": [
+        "Errors appear next to the field and typed values are kept.",
+        "After saving, the page says what happened and what to do next."
+      ]
+    },
+    {
+      "id": "admin-categories",
+      "audience": "owner",
+      "purpose": "Keep the store's categories tidy.",
+      "content": [
+        "A list of categories with product counts",
+        "Add, rename and reorder controls",
+        "Delete, available only when a category has no products"
+      ],
+      "interactions": [
+        "Add, rename, reorder, delete."
+      ],
+      "states": [
+        "Categories listed",
+        "Delete blocked with a reason",
+        "Empty"
+      ],
+      "success_criteria": [
+        "The owner understands why a delete is blocked and what to do."
+      ]
     }
   ],
   "primary_journeys": [
@@ -267,6 +369,19 @@
         "Review the updated cart."
       ],
       "expected_outcome": "The cart contents, item count, and totals consistently reflect the latest changes."
+    },
+    {
+      "id": "owner-adds-product",
+      "name": "The owner adds a product and publishes it",
+      "steps": [
+        "Sign in to the owner area.",
+        "Open Products and choose Add product.",
+        "Enter name, price, category and stock.",
+        "Upload photos and choose the cover.",
+        "Save, then publish.",
+        "Open the store and find the product in its category."
+      ],
+      "expected_outcome": "The product appears to shoppers in the right category with its photos, and a draft never does."
     }
   ],
   "design_intent": {
@@ -278,8 +393,19 @@
     },
     "style": {
       "direction": "not chosen by the owner. The builder used a warm, contemporary craft look.",
-      "options_to_offer": ["modern", "contemporary", "antique"],
-      "what_each_changes": ["typefaces", "colour palette", "corner radius and borders", "image treatment", "ornament and texture", "copy tone"]
+      "options_to_offer": [
+        "modern",
+        "contemporary",
+        "antique"
+      ],
+      "what_each_changes": [
+        "typefaces",
+        "colour palette",
+        "corner radius and borders",
+        "image treatment",
+        "ornament and texture",
+        "copy tone"
+      ]
     }
   },
   "design_principles": [

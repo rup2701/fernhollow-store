@@ -1,12 +1,14 @@
 "use server";
 
 import { randomInt } from "node:crypto";
-import { eq } from "drizzle-orm";
+import { and, eq, gte, sql } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { getProductsByIds } from "@/lib/catalog";
 import { cartPayloadSchema, validateCustomer, type CheckoutState } from "@/lib/checkout-schema";
 import { normalizePersonalization, validatePersonalization } from "@/lib/personalization";
 import { lineTotal, totals } from "@/lib/pricing";
+
+class StockError extends Error {}
 
 const REF_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 
@@ -65,7 +67,8 @@ export async function placeDemoOrder(_prev: CheckoutState, formData: FormData): 
 
   // Re-price and re-validate every line from the database.
   const products = await getProductsByIds([...new Set(cart.map((l) => l.productId))]);
-  const unavailable: { id: string; name: string }[] = [];
+  const unavailable: { id: string; name: string; reason?: string }[] = [];
+  const wanted = new Map<number, number>();
   const priceUpdates: Record<string, number> = {};
   const priced: Omit<typeof schema.orderItems.$inferInsert, "orderId">[] & { unitPriceCents: number; quantity: number }[] = [];
 
@@ -86,10 +89,22 @@ export async function placeDemoOrder(_prev: CheckoutState, formData: FormData): 
       personalization = normalizePersonalization(line.personalization);
     }
 
+    // Stock is per product, so add up every line of the same product before comparing.
+    const totalWanted = (wanted.get(product.id) ?? 0) + line.quantity;
+    wanted.set(product.id, totalWanted);
+    if (product.stock <= 0) {
+      unavailable.push({ id: line.id, name: product.name, reason: "sold out" });
+      continue;
+    }
+    if (totalWanted > product.stock) {
+      unavailable.push({ id: line.id, name: product.name, reason: `only ${product.stock} left` });
+      continue;
+    }
+
     const valueIds = line.variantKey === "" ? [] : line.variantKey.split(".").map(Number);
-    const options = product.options.map((o, i) => {
-      const value = o.values.find((v) => v.id === valueIds[i])!;
-      return { name: o.name, value: value.label, delta: value.priceDeltaCents };
+    const options = product.options.flatMap((o, i) => {
+      const value = o.values.find((v) => v.id === valueIds[i]);
+      return value ? [{ name: o.name, value: value.label, delta: value.priceDeltaCents }] : [];
     });
     const unitPriceCents = product.basePriceCents + options.reduce((sum, o) => sum + o.delta, 0);
     if (unitPriceCents !== line.unitPriceCents) priceUpdates[line.id] = unitPriceCents;
@@ -112,11 +127,11 @@ export async function placeDemoOrder(_prev: CheckoutState, formData: FormData): 
   }
 
   if (unavailable.length > 0) {
-    const names = [...new Set(unavailable.map((u) => u.name))].join(", ");
+    const names = [...new Set(unavailable.map((u) => (u.reason ? `${u.name}: ${u.reason}` : u.name)))].join("; ");
     return {
       status: "error",
       fieldErrors: {},
-      formError: `Some items are no longer available (${names}). Remove them from your cart to continue.`,
+      formError: `Some items are no longer available (${names}). Remove them or lower the quantity in your cart to continue.`,
       unavailableLineIds: unavailable.map((u) => u.id),
     };
   }
@@ -156,12 +171,24 @@ export async function placeDemoOrder(_prev: CheckoutState, formData: FormData): 
           .returning({ id: schema.orders.id });
         if (!order) continue;
         await tx.insert(schema.orderItems).values(priced.map((p) => ({ ...p, orderId: order.id })));
+        // Take the stock. The guard stops two simultaneous orders from selling the same last piece.
+        for (const [productId, quantity] of wanted) {
+          const taken = await tx
+            .update(schema.products)
+            .set({ stock: sql`${schema.products.stock} - ${quantity}` })
+            .where(and(eq(schema.products.id, productId), gte(schema.products.stock, quantity)))
+            .returning({ id: schema.products.id });
+          if (taken.length === 0) throw new StockError();
+        }
         return reference;
       }
       throw new Error("Could not allocate an order reference");
     });
     return { status: "success", reference };
   } catch (err) {
+    if (err instanceof StockError) {
+      return { status: "error", fieldErrors: {}, formError: "Something in your cart just sold out. Please review your cart and try again." };
+    }
     // A concurrent duplicate submission may have won the race: return its order.
     const existing = await findByIdempotencyKey(idempotencyKey);
     if (existing) return { status: "success", reference: existing };

@@ -19,6 +19,9 @@ import {
  * Cart           -> browser-local (localStorage), per requirements.json
  * Order          -> orders + order_items (snapshot of what was agreed at checkout)
  * Customer       -> embedded on orders (no accounts; out of scope)
+ * Category       -> categories (owner-managed; products.category holds the category name)
+ * ProductImage   -> product_images (stored through the storage adapter)
+ * Owner          -> not in the database: email and password hash come from environment config
  *
  * All money is stored as integer cents (USD).
  */
@@ -68,7 +71,10 @@ export const products = pgTable(
     category: text("category").notNull(),
     basePriceCents: integer("base_price_cents").notNull(),
     /** Only products available for sale appear in the shopper catalog. */
+    /** Published products are visible to shoppers; unpublished ones are drafts. */
     isAvailable: boolean("is_available").notNull().default(true),
+    /** Units on hand. 0 shows "Sold out" and blocks purchase. */
+    stock: integer("stock").notNull().default(0),
     isFeatured: boolean("is_featured").notNull().default(false),
     /** Null means the product does not support personalization. */
     personalization: jsonb("personalization").$type<PersonalizationRule | null>(),
@@ -86,6 +92,10 @@ export const productOptions = pgTable("product_options", {
     .references(() => products.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   position: integer("position").notNull().default(0),
+  /** A required option must be chosen before adding to the cart. */
+  required: boolean("required").notNull().default(true),
+  /** Value preselected on the product page. Null means the shopper chooses. */
+  defaultValueId: integer("default_value_id"),
 });
 
 export const optionValues = pgTable("option_values", {
@@ -163,3 +173,50 @@ export const orderItems = pgTable("order_items", {
   quantity: integer("quantity").notNull(),
   lineTotalCents: integer("line_total_cents").notNull(),
 });
+
+export const categories = pgTable(
+  "categories",
+  {
+    id: serial("id").primaryKey(),
+    name: text("name").notNull(),
+    slug: text("slug").notNull(),
+    position: integer("position").notNull().default(0),
+    /** Earlier slugs, so a renamed category's old URL still works. */
+    previousSlugs: jsonb("previous_slugs").$type<string[]>().notNull().default([]),
+  },
+  (t) => [uniqueIndex("categories_slug_idx").on(t.slug), uniqueIndex("categories_name_idx").on(t.name)],
+);
+
+export const productImages = pgTable(
+  "product_images",
+  {
+    id: serial("id").primaryKey(),
+    productId: integer("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
+    /** Web-sized image shown to shoppers. */
+    url: text("url").notNull(),
+    /** The file as uploaded, kept for the owner. */
+    originalUrl: text("original_url").notNull(),
+    storageKey: text("storage_key").notNull(),
+    originalKey: text("original_key").notNull(),
+    alt: text("alt").notNull(),
+    /** Position 0 is the cover. */
+    position: integer("position").notNull().default(0),
+    /** Pixel size of the original upload. */
+    width: integer("width").notNull(),
+    height: integer("height").notNull(),
+  },
+  (t) => [index("product_images_product_idx").on(t.productId)],
+);
+
+/** Failed owner sign-in attempts, used to pause sign-in after repeated failures. */
+export const loginAttempts = pgTable(
+  "login_attempts",
+  {
+    id: serial("id").primaryKey(),
+    ip: text("ip").notNull(),
+    at: timestamp("at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("login_attempts_ip_idx").on(t.ip, t.at)],
+);

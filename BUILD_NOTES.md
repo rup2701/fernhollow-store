@@ -113,3 +113,27 @@ keeps its drawing. Known limits of the photo path, each a candidate edge for the
 ## CR-005: reassurance strip above the footer
 
 `src/components/trust-strip.tsx`, rendered last on the home page. Four items (named makers, 30-day returns, free shipping over $75, reply within two business days). The shipping numbers are read from `src/lib/pricing.ts`, the same settings checkout uses, so they cannot drift. The reference image claimed years trading and customer counts; those were deliberately not copied because this store has no such facts. `-mb-24` on the section cancels the footer's own top margin on this page only. Seven checks added to `e2e/layout.mjs` (suite now 21).
+
+## CR-006: owner area (added 2026-10-22)
+
+Built into v1 by hand from the owner items in the v2 base specs (`owner-*` requirements, `admin-*` pages, E-029 to E-036).
+
+**Verified:** `e2e/admin.mjs` 73/73, and the four earlier suites (46, 32, 11, 21) all pass against a production build. In dev mode one earlier check (`cart persists across navigation/reload`) fails the same way on the untouched v1 code, so it is a dev-server timing issue, not a regression.
+
+**Decisions made without asking**
+- "Published" reuses the existing `products.is_available` column. Unpublished products are drafts.
+- Categories live in a new `categories` table. A product stores its category's name, and renaming updates those products in one step. The old slug is kept so old links redirect.
+- Checkout now takes stock when an order is placed (not specified; without it stock would be a label only), and refuses a cart that asks for more than is on hand.
+- A new product starts as a draft, with a drawn placeholder until it has a photo.
+- A signed-in owner can preview a draft product page; shoppers get the normal not-found page. This changes E-006 (a bookmarked unavailable product used to explain itself): its test was updated.
+- Existing products keep their starter photos from `public/products`. They count as "has a photo" for publishing, and the first owner upload replaces them.
+- Migration `0001_owner_area.sql` also sets stock to 25 on existing products and creates categories from the ones in use.
+
+**Known gaps**
+- Sign-out deletes the browser cookie. The session token itself is not revoked on the server, so a copied token would work until it expires (7 days).
+- On Vercel, a request body is limited to about 4.5 MB, so a photo between 4.5 and 5 MB may be refused by the host before our 5 MB check. Fix: upload straight from the browser to Blob.
+- The Vercel Blob adapter is written but untested (no token in the build sandbox). Local-disk storage is what the tests exercised.
+- Sign-in attempts are rate-limited by the address in `x-forwarded-for`.
+- The empty-store state of the product list is built but not tested (the test database always has products).
+- E-031: the "fails to start" check was verified by hand. The in-app message is not covered by a test.
+- Orders and policies cannot be edited in the owner area (out of scope, planned later).

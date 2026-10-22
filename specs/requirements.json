@@ -248,18 +248,147 @@
         "Compare the shipping and returns wording with the Help page and checkout totals.",
         "Resize to 1440, 700 and 390 px."
       ]
+    },
+    {
+      "id": "owner-sign-in",
+      "name": "Owner signs in to the owner area",
+      "priority": "must-have",
+      "status": "approved",
+      "description": "The store owner signs in to a private owner area at /admin. Shoppers have no accounts; this is the only sign-in.",
+      "acceptance_criteria": [
+        "Every /admin page and every owner API route requires a signed-in owner; anything else redirects to sign-in or returns 401.",
+        "The owner's email and a password hash come from environment configuration. No credentials appear in code or the repo.",
+        "A wrong email or password shows one generic message that does not say which part was wrong.",
+        "After 5 failed attempts from one address within 15 minutes, further attempts are refused for 15 minutes with a clear message.",
+        "Sessions last 7 days and sign-out ends the session immediately.",
+        "No link to the owner area appears anywhere in the shopper experience."
+      ],
+      "verification": [
+        "Open /admin signed out and confirm the redirect.",
+        "Sign in with a wrong password, then the right one.",
+        "Call an owner API route without a session and confirm 401.",
+        "Sign out and confirm /admin is protected again."
+      ],
+      "change_request": "CR-006: Add an owner area (sign-in, products, photos, publish and stock, categories)"
+    },
+    {
+      "id": "owner-product-list",
+      "name": "Owner sees all products",
+      "priority": "must-have",
+      "status": "approved",
+      "description": "A list of every product, including drafts, so the owner can find and manage anything quickly.",
+      "acceptance_criteria": [
+        "The list shows each product's cover photo, name, category, price, stock and status (draft or published).",
+        "The owner can search by name and filter by category and by status.",
+        "An empty store shows a clear first step: add your first product.",
+        "Each row opens that product for editing, and a visible button adds a new product."
+      ],
+      "verification": [
+        "Open the list with published and draft products and check every column.",
+        "Search for a product by part of its name.",
+        "Filter by a category and by draft status.",
+        "View the empty state on a store with no products."
+      ],
+      "change_request": "CR-006: Add an owner area (sign-in, products, photos, publish and stock, categories)"
+    },
+    {
+      "id": "owner-product-form",
+      "name": "Owner creates and edits a product",
+      "priority": "must-have",
+      "status": "approved",
+      "description": "One form creates a new product or edits an existing one, including its options.",
+      "acceptance_criteria": [
+        "Fields: name (required, 80 characters at most), slug, description (2000 at most), price in USD (greater than 0, two decimals), category (chosen from the store's categories), stock (whole number, 0 or more), status.",
+        "The slug is generated from the name, uses lowercase letters, numbers and hyphens, and must be unique. A duplicate is refused with a message that suggests an alternative.",
+        "The owner can add options (such as size or glaze) with values and optional price adjustments, mark an option required, and choose a default value.",
+        "Validation messages appear next to the field that caused them, and what the owner typed is kept.",
+        "Saving confirms what happened and says what comes next (for example: add photos, or publish).",
+        "Leaving the form with unsaved changes asks for confirmation.",
+        "Editing a product never changes orders already placed; orders keep the name, options and price they were bought at."
+      ],
+      "verification": [
+        "Create a product with valid values and see it in the list.",
+        "Submit with a missing name, a zero price and a duplicate slug.",
+        "Add a required option with a default and confirm the shopper page honors it.",
+        "Change a price and confirm an earlier order still shows the old price."
+      ],
+      "change_request": "CR-006: Add an owner area (sign-in, products, photos, publish and stock, categories)"
+    },
+    {
+      "id": "owner-photo-upload",
+      "name": "Owner uploads product photos",
+      "priority": "must-have",
+      "status": "approved",
+      "description": "Photos are added to a product through the owner area and shown to shoppers on cards and product pages.",
+      "acceptance_criteria": [
+        "Up to 8 photos per product. JPEG, PNG and WebP only, 5 MB at most each. Anything else is refused with a clear message naming the problem.",
+        "Each photo has alt text, defaulting to the product name, which the owner can edit.",
+        "The first photo is the cover. The owner can reorder photos and remove one.",
+        "A photo under 800 pixels wide is accepted with a visible warning that it may look soft.",
+        "Upload shows progress, and a failed upload says so and can be retried without losing the form.",
+        "Storage sits behind a small adapter with two implementations: local disk for development and object storage for deployed stores. The deployed build must not write uploads to the server's own filesystem.",
+        "Shoppers see the cover on catalog cards and the full set on the product page."
+      ],
+      "verification": [
+        "Upload three photos and set the second as cover.",
+        "Try a PDF and a 12 MB image.",
+        "Upload an image 500 pixels wide and confirm the warning.",
+        "Reload and confirm photos persist.",
+        "Confirm the deployed configuration refuses to start without object storage configured."
+      ],
+      "change_request": "CR-006: Add an owner area (sign-in, products, photos, publish and stock, categories)"
+    },
+    {
+      "id": "owner-publish-and-stock",
+      "name": "Owner publishes products and sets stock",
+      "priority": "must-have",
+      "status": "approved",
+      "description": "Draft products stay private until published, and stock controls what shoppers can buy.",
+      "acceptance_criteria": [
+        "Only published products appear to shoppers. A draft's URL shows the standard not-found page to anyone but the owner.",
+        "A product with stock 0 shows 'Sold out' and cannot be added to the cart.",
+        "Checkout re-checks stock and publish status, and tells the shopper which item changed and what they can do.",
+        "Publishing a product with no photo or no price is refused with a clear reason."
+      ],
+      "verification": [
+        "Publish and unpublish a product and check the shopper view.",
+        "Set stock to 0 and try to add it.",
+        "Put an item in a cart, unpublish it, then check out.",
+        "Try to publish a product with no photo."
+      ],
+      "change_request": "CR-006: Add an owner area (sign-in, products, photos, publish and stock, categories)"
+    },
+    {
+      "id": "owner-categories",
+      "name": "Owner manages categories",
+      "priority": "must-have",
+      "status": "approved",
+      "description": "The store's categories come from the brief and the owner can change them. They drive the catalog filter and the home page 'shop by' section.",
+      "acceptance_criteria": [
+        "The owner can add, rename and reorder categories.",
+        "A category that still has products cannot be deleted. The message says how many products must move first.",
+        "A category with no published products is hidden from shoppers.",
+        "Renaming a category updates every product in it and the shopper URLs stay valid (a redirect from the old name)."
+      ],
+      "verification": [
+        "Add a category and assign a product to it.",
+        "Try to delete a category with products.",
+        "Rename a category and open its old URL.",
+        "Confirm an empty category is hidden from shoppers."
+      ],
+      "change_request": "CR-006: Add an owner area (sign-in, products, photos, publish and stock, categories)"
     }
   ],
   "out_of_scope": [
     "Real payment processing or collection of payment-card information",
-    "User accounts and authentication",
-    "Seller or administrator dashboard",
     "Real shipping-rate calculation",
     "Real tax calculation",
     "External inventory synchronization",
     "Production order storage",
     "Order email notifications",
     "Analytics integrations",
-    "Multi-seller marketplace functionality"
+    "Multi-seller marketplace functionality",
+    "Shopper accounts and shopper sign-in (the owner area has one owner sign-in)",
+    "Order management, policy editing and analytics in the owner area (planned later)"
   ]
 }

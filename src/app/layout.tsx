@@ -6,10 +6,13 @@ import { CartProvider } from "@/components/cart/cart-context";
 import { AnnouncerProvider } from "@/components/announcer";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
+import { HideOnAdmin } from "@/components/hide-on-admin";
 
 export const metadata: Metadata = {
   title: { default: "Fernhollow Goods · Handmade in small batches", template: "%s · Fernhollow Goods" },
   description: "Ceramics, textiles, woodwork and candles made by hand in a small studio.",
+  // Demo store: keep it out of search results until a real store replaces it.
+  robots: { index: false, follow: false },
 };
 
 export const viewport: Viewport = { themeColor: "#f7f2ea" };
@@ -27,11 +30,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AnnouncerProvider>
           <CartProvider>
             <div className="flex min-h-dvh flex-col">
-              <SiteHeader />
+              <HideOnAdmin>
+                <SiteHeader />
+              </HideOnAdmin>
               <main id="main" className="flex-1">
                 {children}
               </main>
-              <SiteFooter />
+              <HideOnAdmin>
+                <SiteFooter />
+              </HideOnAdmin>
             </div>
           </CartProvider>
         </AnnouncerProvider>

@@ -26,6 +26,7 @@ export function ProductCard({ product, headingLevel = "h3" }: { product: Catalog
         <p className="mt-1 font-semibold tabular-nums">
           {product.hasPriceRange ? <span className="font-normal text-ink-soft">From </span> : null}
           {formatMoney(product.fromPriceCents)}
+          {product.soldOut ? <span className="ml-2 rounded-full bg-danger-soft px-2 py-0.5 text-xs font-medium text-danger">Sold out</span> : null}
           {product.personalizable ? (
             <span className="ml-2 rounded-full bg-paper-deep px-2 py-0.5 text-xs font-medium text-ink-soft">Personalizable</span>
           ) : null}

@@ -62,15 +62,7 @@ const TOPICS: { id: string; title: string; items: QA[] }[] = [
       { q: "How do I look after the walnut board?", a: "Hand wash, dry upright, and rub in a little food-safe oil once a month. Never soak it or put it in the dishwasher." },
       { q: "Will the brass pendant tarnish?", a: "Brass develops a warm patina over time. A soft cloth brings back the shine if you prefer it bright." },
     ],
-  },
-  {
-    id: "demo",
-    title: "About this demo",
-    items: [
-      { q: "Is this a real store?", a: "No. Fernhollow Goods and its makers are fictional. The store exists to demonstrate a complete shopping experience." },
-      { q: "Will I be charged?", a: "Never. Checkout is simulated: it doesn't ask for card details, nothing is charged and nothing ships." },
-    ],
-  },
+  }
 ];
 
 export default function HelpPage() {

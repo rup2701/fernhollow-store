@@ -83,7 +83,8 @@
         "A clear add-to-cart action",
         "Materials & care card (hidden when empty)",
         "Maker line (hidden when empty)",
-        "Specifications card under Materials & care (hidden when empty), with optional links that open in a new tab"
+        "Specifications card under Materials & care (hidden when empty), with optional links that open in a new tab",
+        "Use standard container width, not the wide one"
       ],
       "interactions": [
         "Explore product images and descriptions.",

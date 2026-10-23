@@ -570,6 +570,53 @@
       ],
       "found_by": "owner-area spec review (CR-006)",
       "note": "Tested on the server: the served copy is resized and the original kept. The owner-facing \"resized\" note appears after upload and is not asserted in a test."
+    },
+    {
+      "id": "E-037",
+      "area": "cart",
+      "edge": "A cart line asks for more of a product than is in stock (stock fell after the item was added, or two lines of the same product together exceed it).",
+      "shopper_sees": "On the cart page the line says how many are available and offers \"Change to N\"; the quantity buttons stop at that number. At checkout: \"Only N of <product> are in stock. Lower the quantity to continue.\"",
+      "owner_sees": "Nothing.",
+      "default_behavior": "Stock is per product. The cart page asks the server for current stock when it opens; checkout re-checks and never creates the order.",
+      "status": "handled",
+      "tested": "yes",
+      "tests": [
+        "E-037 cart line above stock shows how many are available",
+        "E-037 Change to N sets the quantity",
+        "E-037 quantity stepper stops at stock",
+        "E-037 checkout says only N are in stock, not 'no longer available'"
+      ],
+      "found_by": "CR-007"
+    },
+    {
+      "id": "E-038",
+      "area": "owner-products",
+      "edge": "The owner types a specification link that is not http or https (for example javascript:), or a malformed one.",
+      "shopper_sees": "The line as plain text. Nothing is clickable.",
+      "owner_sees": "Nothing special; the text is kept exactly as typed.",
+      "default_behavior": "Only absolute http and https links become links; they open in a new tab with rel noopener.",
+      "status": "handled",
+      "tested": "yes",
+      "tests": [
+        "E-038 javascript: link is plain text",
+        "E-038 https link opens in a new tab"
+      ],
+      "found_by": "CR-007"
+    },
+    {
+      "id": "E-039",
+      "area": "owner-products",
+      "edge": "The owner leaves Materials & care, the maker line or Specifications empty.",
+      "shopper_sees": "No empty card and no empty italic line.",
+      "owner_sees": "Nothing.",
+      "default_behavior": "Empty sections are not rendered.",
+      "status": "handled",
+      "tested": "yes",
+      "tests": [
+        "E-039 empty specifications show no card",
+        "E-039 empty maker line is not shown"
+      ],
+      "found_by": "CR-007"
     }
   ],
   "implementation_guidance": {

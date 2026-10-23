@@ -67,7 +67,9 @@ export async function placeDemoOrder(_prev: CheckoutState, formData: FormData): 
 
   // Re-price and re-validate every line from the database.
   const products = await getProductsByIds([...new Set(cart.map((l) => l.productId))]);
-  const unavailable: { id: string; name: string; reason?: string }[] = [];
+  const unavailable: { id: string; name: string }[] = [];
+  /** Lines held back only because the product has less stock than the cart asks for. */
+  const overStock: { id: string; name: string; stock: number; allowed: number }[] = [];
   const wanted = new Map<number, number>();
   const priceUpdates: Record<string, number> = {};
   const priced: Omit<typeof schema.orderItems.$inferInsert, "orderId">[] & { unitPriceCents: number; quantity: number }[] = [];
@@ -93,11 +95,12 @@ export async function placeDemoOrder(_prev: CheckoutState, formData: FormData): 
     const totalWanted = (wanted.get(product.id) ?? 0) + line.quantity;
     wanted.set(product.id, totalWanted);
     if (product.stock <= 0) {
-      unavailable.push({ id: line.id, name: product.name, reason: "sold out" });
+      unavailable.push({ id: line.id, name: product.name });
       continue;
     }
     if (totalWanted > product.stock) {
-      unavailable.push({ id: line.id, name: product.name, reason: `only ${product.stock} left` });
+      // What this line could still be lowered to, after the product's earlier lines.
+      overStock.push({ id: line.id, name: product.name, stock: product.stock, allowed: Math.max(0, product.stock - (totalWanted - line.quantity)) });
       continue;
     }
 
@@ -126,13 +129,24 @@ export async function placeDemoOrder(_prev: CheckoutState, formData: FormData): 
     });
   }
 
-  if (unavailable.length > 0) {
-    const names = [...new Set(unavailable.map((u) => (u.reason ? `${u.name}: ${u.reason}` : u.name)))].join("; ");
+  if (unavailable.length > 0 || overStock.length > 0) {
+    const parts: string[] = [];
+    for (const [name, stock] of new Map(overStock.map((o) => [o.name, o.stock]))) parts.push(`Only ${stock} of ${name} are in stock.`);
+    const gone = [...new Set(unavailable.map((u) => u.name))];
+    if (gone.length > 0) parts.push(`Some items are no longer available (${gone.join("; ")}).`);
+    parts.push(
+      overStock.length > 0 && gone.length > 0
+        ? "Lower the quantity and remove the unavailable items to continue."
+        : overStock.length > 0
+          ? "Lower the quantity to continue."
+          : "Remove them to continue.",
+    );
     return {
       status: "error",
       fieldErrors: {},
-      formError: `Some items are no longer available (${names}). Remove them or lower the quantity in your cart to continue.`,
-      unavailableLineIds: unavailable.map((u) => u.id),
+      formError: parts.join(" "),
+      unavailableLineIds: [...unavailable, ...overStock].map((u) => u.id),
+      stockLimits: Object.fromEntries(overStock.filter((o) => o.allowed >= 1).map((o) => [o.id, o.allowed])),
     };
   }
   if (Object.keys(priceUpdates).length > 0) {

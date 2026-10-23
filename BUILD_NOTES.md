@@ -137,3 +137,25 @@ Built into v1 by hand from the owner items in the v2 base specs (`owner-*` requi
 - The empty-store state of the product list is built but not tested (the test database always has products).
 - E-031: the "fails to start" check was verified by hand. The in-app message is not covered by a test.
 - Orders and policies cannot be edited in the owner area (out of scope, planned later).
+
+## CR-007: product form matches the product page, Specifications, clearer stock messages
+
+**What changed.** The owner's product form now has Materials & care, Maker line and Specifications. New column `products.specifications` (migration `0002`, default empty, so existing databases keep working). The product page hides the Materials & care card, the Specifications card and the maker line when they are empty. The cart page asks the server for current stock (`src/app/cart/actions.ts`), stops the quantity stepper at stock, and shows "Only N available" with a "Change to N" button on a line above stock. Checkout says "Only N of X are in stock. Lower the quantity to continue." for stock limits, and keeps "no longer available" for sold-out and unpublished items. Edges E-037 to E-039 added.
+
+**Decisions made without asking**
+- Materials & care uses the same limits as Specifications (20 lines, 300 characters); the maker line is limited to 120 characters. The request only gave limits for Specifications.
+- Over-limit input is refused with a message next to the field. It is not cut short.
+- A product created in the owner area no longer gets the made-up line "Made in the Fernhollow studio". Its maker line is whatever the owner types, and empty means no line. Existing products are untouched.
+- An empty Materials & care list now hides its card (it used to show a heading with nothing under it). The request only asked for this for Specifications.
+- A link that is not a valid http or https link is shown exactly as typed, including the brackets, so the owner can see what is wrong. A link may not contain spaces or `)`.
+- Stock is per product (as in checkout). In the cart, the other lines of the same product count against a line's allowance, so "Change to N" can be lower than the product's stock.
+- On the cart page a line whose product is sold out or unpublished says "no longer available" with a note to remove it. The request did not ask for this on the cart page.
+- At checkout, a line held back by a stock limit also gets a "Change to N" button next to Remove.
+- Existing cart lines keep working if the stock request fails: the cart behaves as before and checkout still checks.
+
+**Verified.** Production build: storefront 46/46, change-requests 32/32, edges 11/11, layout 21/21, admin 101/101; `tsc` clean.
+
+**Not verified / limits**
+- The cart fetches stock when it opens or when its products change, not live. If stock drops while the cart is open, the shopper learns at checkout.
+- Tested only on Chromium. The Specifications card on a narrow phone screen was not separately checked (the layout suite's overflow checks do not open a product with specifications).
+- The seed catalog has no specifications; the owner adds them.

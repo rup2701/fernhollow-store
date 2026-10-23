@@ -1,17 +1,37 @@
 "use client";
 
 import Link from "next/link";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useCart } from "@/components/cart/cart-context";
 import { useAnnounce } from "@/components/announcer";
 import { LineDescription, LineThumb, Totals } from "@/components/cart/line-item";
 import { Container, EmptyState, buttonStyles } from "@/components/ui";
-import { MAX_QUANTITY, formatMoney, lineTotal } from "@/lib/pricing";
+import { getStockLevels } from "@/app/cart/actions";
+import { formatMoney, lineTotal } from "@/lib/pricing";
+import { lineAllowance, maxForLine, type StockMap } from "@/lib/stock";
 
 export function CartView() {
   const { lines, hydrated, itemCount, subtotalCents, shippingCents, totalCents, setQuantity, removeLine } = useCart();
   const announce = useAnnounce();
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const [stock, setStock] = useState<StockMap>({});
+
+  // Ask the server how many of each product are in stock now (the cart itself only lives in this browser).
+  const productKey = [...new Set(lines.map((l) => l.productId))].sort((a, b) => a - b).join(",");
+  useEffect(() => {
+    if (!productKey) return;
+    let cancelled = false;
+    getStockLevels(productKey.split(",").map(Number))
+      .then((levels) => {
+        if (!cancelled) setStock(levels);
+      })
+      .catch(() => {
+        // Without stock numbers the cart works as before; checkout still checks.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [productKey]);
 
   if (!hydrated) {
     return (
@@ -61,11 +81,22 @@ export function CartView() {
                       <span className="sr-only">Unit price: </span>
                       {formatMoney(line.unitPriceCents)} each
                     </p>
+                    <StockNotice
+                      quantity={line.quantity}
+                      allowed={lineAllowance(lines, line, stock)}
+                      stock={stock[line.productId]?.stock ?? 0}
+                      shared={lines.some((l) => l.productId === line.productId && l.id !== line.id)}
+                      onChange={(q) => {
+                        setQuantity(line.id, q);
+                        announce(`${line.name} quantity updated to ${q}.`);
+                      }}
+                    />
                   </div>
                   <div className="flex items-center justify-between gap-4 sm:flex-col sm:items-end sm:justify-start">
                     <QuantityControl
                       name={line.name}
                       quantity={line.quantity}
+                      max={maxForLine(lines, line, stock)}
                       onChange={(q) => {
                         setQuantity(line.id, q);
                         announce(`${line.name} quantity updated to ${q}.`);
@@ -119,7 +150,49 @@ export function CartView() {
   );
 }
 
-function QuantityControl({ name, quantity, onChange }: { name: string; quantity: number; onChange: (q: number) => void }) {
+/** Shown when a line asks for more than is in stock (or the product is gone). */
+function StockNotice({
+  quantity,
+  allowed,
+  stock,
+  shared,
+  onChange,
+}: {
+  quantity: number;
+  allowed: number | null;
+  stock: number;
+  shared: boolean;
+  onChange: (q: number) => void;
+}) {
+  if (allowed === null || quantity <= allowed) return null;
+  const gone = stock <= 0 || (allowed === 0 && !shared);
+  return (
+    <div data-testid="stock-notice" role="status" className="mt-2 rounded-lg border border-danger/30 bg-danger-soft px-3 py-2 text-sm text-danger">
+      {gone ? (
+        <p>This item is no longer available. Remove it to continue.</p>
+      ) : allowed === 0 ? (
+        <p>Your other lines of this item already use all {stock} in stock. Remove one to continue.</p>
+      ) : (
+        <>
+          <p>
+            {shared
+              ? `Only ${allowed} more available for this line (${stock} in stock, shared with your other lines of this item).`
+              : `Only ${allowed} available.`}
+          </p>
+          <button
+            type="button"
+            onClick={() => onChange(allowed)}
+            className="mt-1 font-semibold underline underline-offset-4"
+          >
+            Change to {allowed}
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+
+function QuantityControl({ name, quantity, max, onChange }: { name: string; quantity: number; max: number; onChange: (q: number) => void }) {
   return (
     <div className="inline-flex items-center rounded-full border border-line bg-card" role="group" aria-label={`Quantity for ${name}`}>
       <button
@@ -137,7 +210,7 @@ function QuantityControl({ name, quantity, onChange }: { name: string; quantity:
       <button
         type="button"
         onClick={() => onChange(quantity + 1)}
-        disabled={quantity >= MAX_QUANTITY}
+        disabled={quantity >= max}
         aria-label={`Increase quantity of ${name}`}
         className="flex h-10 w-10 items-center justify-center rounded-full text-lg disabled:cursor-not-allowed disabled:opacity-35"
       >

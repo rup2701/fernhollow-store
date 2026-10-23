@@ -78,5 +78,7 @@ export type CheckoutState =
       priceUpdates?: Record<string, number>;
       /** Cart line ids that can no longer be purchased. */
       unavailableLineIds?: string[];
+      /** For lines held back by a stock limit: the quantity they can be lowered to, keyed by cart line id. */
+      stockLimits?: Record<string, number>;
     }
   | { status: "success"; reference: string };

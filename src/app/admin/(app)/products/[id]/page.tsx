@@ -78,6 +78,9 @@ export default async function EditProductPage({
             price: centsToDollars(p.basePriceCents),
             category: p.category,
             stock: String(p.stock),
+            details: p.details.join("\n"),
+            maker: p.maker,
+            specifications: p.specifications.join("\n"),
             options,
           }}
         />

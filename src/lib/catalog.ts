@@ -26,6 +26,7 @@ export type ProductDetail = {
   tagline: string;
   description: string;
   details: string[];
+  specifications: string[];
   category: string;
   maker: string;
   basePriceCents: number;
@@ -177,6 +178,7 @@ async function loadDetail(p: typeof schema.products.$inferSelect): Promise<Produ
     tagline: p.tagline,
     description: p.description,
     details: p.details,
+    specifications: p.specifications,
     category: p.category,
     maker: p.maker,
     basePriceCents: p.basePriceCents,

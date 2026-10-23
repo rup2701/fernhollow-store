@@ -24,6 +24,10 @@ export type ProductDraft = {
   price: string;
   category: string;
   stock: string;
+  /** One item per line. */
+  details: string;
+  maker: string;
+  specifications: string;
   options: OptionDraft[];
 };
 
@@ -138,6 +142,48 @@ export function ProductForm({
           aria-describedby={describedBy("description", "x", errors.description)}
           onChange={(e) => set("description", e.target.value)}
           className={`${inputClass} ${errors.description ? "border-danger" : "border-line"}`}
+        />
+      </Field>
+
+      <Field id="details" label="Materials & care (optional)" hint="One item per line, up to 20 lines. Shown as a card on the product page." error={errors.details}>
+        <textarea
+          id="details"
+          name="details"
+          rows={5}
+          value={draft.details}
+          aria-invalid={errors.details ? true : undefined}
+          aria-describedby={describedBy("details", "x", errors.details)}
+          onChange={(e) => set("details", e.target.value)}
+          className={`${inputClass} ${errors.details ? "border-danger" : "border-line"}`}
+        />
+      </Field>
+
+      <Field
+        id="specifications"
+        label="Specifications (optional)"
+        hint="One bullet per line, up to 20 lines of 300 characters. To add a link, write [link text](https://example.com/page). Leave empty to show no card."
+        error={errors.specifications}
+      >
+        <textarea
+          id="specifications"
+          name="specifications"
+          rows={6}
+          value={draft.specifications}
+          aria-invalid={errors.specifications ? true : undefined}
+          aria-describedby={describedBy("specifications", "x", errors.specifications)}
+          onChange={(e) => set("specifications", e.target.value)}
+          className={`${inputClass} ${errors.specifications ? "border-danger" : "border-line"}`}
+        />
+      </Field>
+
+      <Field id="maker" label="Maker line (optional)" hint="The short italic line under the description, like “Thrown by Ines in the studio’s back room”. Empty means no line." error={errors.maker}>
+        <input
+          id="maker"
+          name="maker"
+          value={draft.maker}
+          aria-describedby={describedBy("maker", "x", errors.maker)}
+          onChange={(e) => set("maker", e.target.value)}
+          className={`${inputClass} ${errors.maker ? "border-danger" : "border-line"}`}
         />
       </Field>
 

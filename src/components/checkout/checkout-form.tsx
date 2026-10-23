@@ -112,6 +112,7 @@ export function CheckoutForm() {
   const errorList = FIELD_ORDER.filter((f) => errors[f]);
   const unavailableIds = state.status === "error" ? (state.unavailableLineIds ?? []) : [];
   const unavailableInCart = cart.lines.filter((l) => unavailableIds.includes(l.id));
+  const stockLimits = state.status === "error" ? (state.stockLimits ?? {}) : {};
 
   return (
     <Container className="py-10 sm:py-14">
@@ -166,9 +167,16 @@ export function CheckoutForm() {
                         {l.name}
                         {l.options.length ? ` (${l.options.map((o) => o.value).join(" / ")})` : ""}
                       </span>
-                      <button type="button" onClick={() => cart.removeLine(l.id)} className="font-semibold text-danger underline">
-                        Remove<span className="sr-only"> {l.name}</span>
-                      </button>
+                      <span className="flex gap-4">
+                        {stockLimits[l.id] !== undefined && stockLimits[l.id] < l.quantity ? (
+                          <button type="button" onClick={() => cart.setQuantity(l.id, stockLimits[l.id])} className="font-semibold text-danger underline">
+                            Change to {stockLimits[l.id]}
+                          </button>
+                        ) : null}
+                        <button type="button" onClick={() => cart.removeLine(l.id)} className="font-semibold text-danger underline">
+                          Remove<span className="sr-only"> {l.name}</span>
+                        </button>
+                      </span>
                     </li>
                   ))}
                 </ul>

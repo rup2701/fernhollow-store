@@ -37,15 +37,22 @@
         "Required options must be selected before a product can be added to the cart.",
         "Unavailable variants cannot be added to the cart, and their unavailable state is communicated clearly.",
         "The selected variant and personalization are preserved when the product is added to the cart.",
-        "The page remains usable on narrow mobile screens without horizontal page overflow."
+        "The page remains usable on narrow mobile screens without horizontal page overflow.",
+        "Materials & care shows the owner's list as a card; the card is not shown when the list is empty. The maker line is shown only when it is not empty.",
+        "A Specifications card sits under Materials & care with the heading \"Specifications\", one bullet per line.",
+        "In a specification, [link text](https://example.com) is shown as a link that opens in a new tab. Anything that is not an http or https link is shown as plain text. No other formatting is applied.",
+        "A product with no specifications shows no Specifications card at all."
       ],
       "verification": [
         "Select multiple variants and check their displayed prices.",
         "Test a product that supports personalization and one that does not.",
         "Attempt to add a product without selecting a required option.",
         "Attempt to add an unavailable variant.",
-        "Verify that the chosen configuration appears correctly in the cart."
-      ]
+        "Verify that the chosen configuration appears correctly in the cart.",
+        "Open a product with specifications and follow a link (new tab). Open one without and confirm there is no Specifications card.",
+        "Enter a javascript: link and confirm it is plain text."
+      ],
+      "change_request": "CR-007: Match the owner's product form to the product page, add Specifications, clearer stock messages"
     },
     {
       "id": "shopping-cart",
@@ -63,15 +70,20 @@
         "Different variants or personalization values remain distinguishable as separate configurations.",
         "Identical configurations may combine into one cart line with an increased quantity.",
         "An empty cart displays a helpful message and a path back to the catalog.",
-        "Cart contents persist during navigation, and browser-local persistence is acceptable."
+        "Cart contents persist during navigation, and browser-local persistence is acceptable.",
+        "A cart line whose quantity is above what is in stock shows how many are available and a button \"Change to N\" that sets the quantity to N.",
+        "The quantity control of a cart line cannot go above what is in stock (or above the maximum of 10). Stock is shared by all lines of the same product."
       ],
       "verification": [
         "Add a product and confirm it appears in the cart.",
         "Add a second configuration of the same product and verify the configurations remain distinguishable.",
         "Change a quantity and verify the line total and subtotal update.",
         "Remove an item and verify the cart count and subtotal update.",
-        "Navigate away from the cart and return to confirm the cart state is preserved."
-      ]
+        "Navigate away from the cart and return to confirm the cart state is preserved.",
+        "Lower a product's stock below a cart line's quantity, open the cart, and use \"Change to N\".",
+        "Raise the quantity of a line until the stock limit and confirm the increase button stops."
+      ],
+      "change_request": "CR-007: Match the owner's product form to the product page, add Specifications, clearer stock messages"
     },
     {
       "id": "demo-checkout",
@@ -89,7 +101,8 @@
         "The checkout does not request payment-card details or make real payment API calls.",
         "Submitting valid details creates a demo order and displays an order reference and summary.",
         "The cart is cleared after successful demo order creation.",
-        "Revisiting an order confirmation does not create a duplicate order."
+        "Revisiting an order confirmation does not create a duplicate order.",
+        "When a cart asks for more of a product than is in stock, checkout says \"Only N of <product> are in stock. Lower the quantity to continue.\" and offers to change the quantity. A sold-out or unpublished item keeps a \"no longer available\" message with a way to remove it."
       ],
       "verification": [
         "Attempt to access checkout with an empty cart.",
@@ -97,8 +110,10 @@
         "Complete checkout with valid details and verify the order confirmation.",
         "Verify the confirmation matches the cart contents and totals.",
         "Confirm the cart is cleared after successful submission.",
-        "Inspect the implementation for payment-card fields and real payment calls."
-      ]
+        "Inspect the implementation for payment-card fields and real payment calls.",
+        "Check out with a quantity above stock and with a sold-out item; confirm the two messages differ."
+      ],
+      "change_request": "CR-007: Match the owner's product form to the product page, add Specifications, clearer stock messages"
     },
     {
       "id": "order-confirmation",
@@ -304,15 +319,21 @@
         "Validation messages appear next to the field that caused them, and what the owner typed is kept.",
         "Saving confirms what happened and says what comes next (for example: add photos, or publish).",
         "Leaving the form with unsaved changes asks for confirmation.",
-        "Editing a product never changes orders already placed; orders keep the name, options and price they were bought at."
+        "Editing a product never changes orders already placed; orders keep the name, options and price they were bought at.",
+        "Materials & care: a list the owner types one item per line. Blank lines are ignored. Up to 20 lines, 300 characters each. Existing products show their current list in the form.",
+        "Maker line: the short italic line under the description, optional, 120 characters at most. When empty, shoppers do not see the line. Existing products show their current line in the form.",
+        "Specifications: one bullet per line, up to 20 lines, 300 characters each. A line may contain links written as [link text](https://example.com/page). Only http and https links count."
       ],
       "verification": [
         "Create a product with valid values and see it in the list.",
         "Submit with a missing name, a zero price and a duplicate slug.",
         "Add a required option with a default and confirm the shopper page honors it.",
-        "Change a price and confirm an earlier order still shows the old price."
+        "Change a price and confirm an earlier order still shows the old price.",
+        "Edit Materials & care, the maker line and Specifications on a product and see all three on the shopper page.",
+        "Enter 21 specification lines, or a line over 300 characters, and see the message next to the field.",
+        "Clear the maker line and confirm shoppers no longer see it."
       ],
-      "change_request": "CR-006: Add an owner area (sign-in, products, photos, publish and stock, categories)"
+      "change_request": "CR-006: Add an owner area (sign-in, products, photos, publish and stock, categories); CR-007: Match the owner's product form to the product page, add Specifications, clearer stock messages"
     },
     {
       "id": "owner-photo-upload",

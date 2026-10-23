@@ -80,7 +80,10 @@
         "Availability",
         "Purchasable options, where applicable",
         "Personalization, where supported",
-        "A clear add-to-cart action"
+        "A clear add-to-cart action",
+        "Materials & care card (hidden when empty)",
+        "Maker line (hidden when empty)",
+        "Specifications card under Materials & care (hidden when empty), with optional links that open in a new tab"
       ],
       "interactions": [
         "Explore product images and descriptions.",
@@ -111,7 +114,8 @@
         "Personalization details where applicable",
         "Quantities, unit prices, and line totals",
         "Cart subtotal and any clearly labeled demo charges",
-        "A route to checkout"
+        "A route to checkout",
+        "For a line above the stock on hand: how many are available and a \"Change to N\" button"
       ],
       "interactions": [
         "Change item quantities.",
@@ -121,7 +125,8 @@
       ],
       "states": [
         "Cart with items",
-        "Empty cart"
+        "Empty cart",
+        "A line asks for more than is in stock"
       ],
       "success_criteria": [
         "Shoppers can identify exactly what they intend to purchase.",
@@ -150,7 +155,9 @@
         "Validation errors",
         "Submitting",
         "Order created",
-        "Empty cart"
+        "Empty cart",
+        "A quantity is above stock (\"Only N of ... are in stock. Lower the quantity to continue.\")",
+        "An item is no longer available"
       ],
       "success_criteria": [
         "Required information is validated with understandable messages.",
@@ -283,7 +290,7 @@
       "purpose": "Create or change one product.",
       "content": [
         "Heading showing 'New product' or the product name, with its status",
-        "Fields: name, slug, description, price, category, stock",
+        "Fields: name, slug, short line, description, price, category, stock, Materials & care (one per line), maker line, Specifications (one per line, links written as [text](https://...))",
         "Options editor with required and default per option",
         "Photo area: upload, reorder, cover, alt text, remove",
         "Save, Publish or Unpublish, and Cancel"

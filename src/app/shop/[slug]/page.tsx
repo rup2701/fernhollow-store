@@ -5,6 +5,7 @@ import { getProductBySlug } from "@/lib/catalog";
 import { isOwner } from "@/lib/owner-auth";
 import { ProductConfigurator } from "@/components/product/product-configurator";
 import { Container } from "@/components/ui";
+import { parseSpecLine } from "@/lib/spec-lines";
 
 export const dynamic = "force-dynamic";
 
@@ -64,19 +65,48 @@ export default async function ProductPage({ params }: Params) {
             About this piece
           </h2>
           <p className="mt-4 max-w-prose leading-relaxed text-ink-soft">{product.description}</p>
-          <p className="mt-6 text-sm italic text-moss">{product.maker}</p>
+          {product.maker.trim() ? <p className="mt-6 text-sm italic text-moss">{product.maker}</p> : null}
         </div>
-        <div className="rounded-2xl border border-line bg-card p-6">
-          <h2 className="font-display text-lg font-semibold">Materials &amp; care</h2>
-          <ul className="mt-3 space-y-2 text-sm text-ink-soft">
-            {product.details.map((d) => (
-              <li key={d} className="flex gap-2">
-                <span aria-hidden="true" className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-clay" />
-                {d}
-              </li>
-            ))}
-          </ul>
-        </div>
+        {product.details.length > 0 || product.specifications.length > 0 ? (
+          <div className="space-y-6">
+            {product.details.length > 0 ? (
+              <div className="rounded-2xl border border-line bg-card p-6">
+                <h2 className="font-display text-lg font-semibold">Materials &amp; care</h2>
+                <ul className="mt-3 space-y-2 text-sm text-ink-soft">
+                  {product.details.map((d, i) => (
+                    <li key={i} className="flex gap-2">
+                      <span aria-hidden="true" className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-clay" />
+                      {d}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+            {product.specifications.length > 0 ? (
+              <div data-testid="specifications" className="rounded-2xl border border-line bg-card p-6">
+                <h2 className="font-display text-lg font-semibold">Specifications</h2>
+                <ul className="mt-3 space-y-2 text-sm text-ink-soft">
+                  {product.specifications.map((line, i) => (
+                    <li key={i} className="flex gap-2">
+                      <span aria-hidden="true" className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-clay" />
+                      <span className="min-w-0 break-words">
+                        {parseSpecLine(line).map((part, k) =>
+                          part.href ? (
+                            <a key={k} href={part.href} target="_blank" rel="noopener noreferrer" className="font-medium text-clay underline underline-offset-4">
+                              {part.text}
+                            </a>
+                          ) : (
+                            <span key={k}>{part.text}</span>
+                          ),
+                        )}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
       </section>
     </Container>
   );

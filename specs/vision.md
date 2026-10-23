@@ -51,6 +51,7 @@ The application should include:
 - Product cards put the image first, with minimal frame, padding and text. *(CR-004)*
 - A row of four reassurances (makers, returns, shipping, contact) sits at the bottom of the home page, just above the footer. *(CR-005)*
 - A private owner area where the owner signs in, manages products, photos, stock, publishing and categories. *(CR-006)*
+- The owner can edit everything the product page shows (Materials & care, maker line, Specifications), and the cart and checkout explain stock limits clearly. *(CR-007)*
 
 ## Constraints and Assumptions
 
@@ -90,6 +91,7 @@ The product model is the reference specification against which the generated app
 | CR-004 | "Cards should maximize for image over whitespace" | vision.md (scope), requirements.json (`image-first-cards`), experience.json (`design_intent.layout`) |
 | CR-005 | "Just above the footer, add a similar section on the home page" (four-column icon strip from a reference store) | vision.md (scope), requirements.json (`home-trust-strip`), experience.json (`home` content) |
 | CR-006 | "Add the owner area: sign-in, inventory management, a new-product page, photo upload, publish and stock, categories" | vision.md (scope, constraints), requirements.json (`owner-*`), experience.json (`admin-*` pages, `owner-adds-product`), domain-model.json (Category, ProductImage, Owner, Product), edges.json (E-029 to E-036) |
+| CR-007 | "Match the owner's product form to the product page, add Specifications, and clearer stock messages" | vision.md (scope), requirements.json (`owner-product-form`, `product-details`, `shopping-cart`, `demo-checkout`), experience.json (`product-detail`, `admin-product-edit`, `shopping-cart`, `checkout`), domain-model.json (Product), edges.json (E-037 to E-039) |
 
 Note on CR-005: the reference strip made claims about a different business (years trading, customer counts). Only terms this store actually has are used: named makers, the 30-day returns policy, free shipping over $75 (a flat $6 below it, labelled as a demo estimate) and a two-business-day reply. The numbers are read from the same settings checkout uses.
 

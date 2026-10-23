@@ -300,6 +300,7 @@ await sp.locator("main [role=alert]").first().waitFor();
 const msg = (await sp.locator("main [role=alert]").first().textContent()) ?? "";
 check("E-033 checkout names the item that is no longer available and what to do", msg.includes(name) && /Remove/.test(msg));
 check("E-033 no order was created", sp.url().endsWith("/checkout"));
+check("CR-007 an unpublished item keeps a 'no longer available' message", /no longer available/.test(msg) && !/in stock/.test(msg));
 
 // drafts are hidden from shoppers, visible to the owner
 res = await sp.goto(BASE + "/shop/" + slug);
@@ -324,6 +325,139 @@ await page.goto(productUrl);
 await page.getByLabel("In stock").fill("3");
 await page.getByRole("button", { name: "Save", exact: true }).click();
 await page.getByText(/^Saved\./).waitFor();
+
+// ------------------------------------------------------------------ CR-007: Materials & care, maker line, Specifications
+{
+  const save = async () => {
+    await page.getByRole("button", { name: "Save", exact: true }).click();
+    await page.getByText(/^Saved\./).waitFor();
+  };
+  const setStock = async (n) => {
+    await page.goto(productUrl);
+    await page.getByLabel("In stock").fill(String(n));
+    await save();
+  };
+
+  // existing products keep what they had, and show it in the form
+  await page.goto(BASE + "/admin/products?q=Tea+Towels");
+  const towelHref = await page.locator("tbody a[href^='/admin/products/']").first().getAttribute("href");
+  await page.goto(BASE + towelHref);
+  check("CR-007 an existing product shows its Materials & care in the form", (await page.getByLabel("Materials & care").inputValue()).split("\n").length >= 3);
+  check("CR-007 an existing product shows its maker line in the form", (await page.getByLabel("Maker line").inputValue()).length > 3);
+  await sp.goto(BASE + "/shop/striped-linen-tea-towels");
+  check("CR-007 an existing product still shows Materials & care and its maker line", (await sp.getByRole("heading", { name: "Materials & care" }).count()) === 1 && (await sp.locator("main p.italic").count()) === 1);
+
+  // a new product starts with nothing: no empty cards, no maker line
+  await sp.goto(BASE + "/shop/" + slug);
+  check("E-039 empty Materials & care shows no card", (await sp.getByRole("heading", { name: "Materials & care" }).count()) === 0);
+  check("E-039 empty specifications show no card", (await sp.getByRole("heading", { name: "Specifications" }).count()) === 0);
+  check("E-039 empty maker line is not shown", (await sp.locator("main p.italic").count()) === 0);
+
+  // limits are explained next to the field, and the typed text is kept
+  await page.goto(productUrl);
+  const tooMany = Array.from({ length: 21 }, (_, i) => `Line ${i + 1}`).join("\n");
+  await page.getByLabel("Specifications").fill(tooMany);
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await page.getByText("Nothing was saved").waitFor();
+  check("CR-007 21 specification lines are refused next to the field", (await page.getByText("Specifications can have 20 lines at most (now 21).").count()) === 1);
+  check("CR-007 the typed specifications are kept", (await page.getByLabel("Specifications").inputValue()) === tooMany);
+  await page.getByLabel("Specifications").fill("x".repeat(301));
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await page.getByText(/Keep each line of Specifications to 300 characters/).waitFor();
+  check("CR-007 a specification line over 300 characters is refused", true);
+  await page.getByLabel("Specifications").fill(Array.from({ length: 20 }, () => "y".repeat(300)).join("\n"));
+  await page.getByLabel("Materials & care").fill("m".repeat(301));
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await page.getByText(/Keep each line of Materials & care to 300 characters/).waitFor();
+  check("CR-007 20 lines of 300 characters are accepted, an overlong care line is not", (await page.getByText(/Keep each line of Specifications/).count()) === 0);
+
+  // save real content
+  await page.getByLabel("Materials & care").fill("Brass frame\n\n  Hand wash only  \n");
+  await page.getByLabel("Maker line").fill("Cast by Ines in the studio's back room");
+  await page.getByLabel("Specifications").fill(
+    [
+      "Scented wax in a glass jar",
+      "Small: 40-hour burn time",
+      "Large: 85-hour burn time",
+      "[Candle care guide](https://example.com/candle-care)",
+      "[Bad one](javascript:alert(1)) stays text",
+      "[Mail us](mailto:a@b.example) too",
+      "**not bold** <b>not html</b>",
+    ].join("\n"),
+  );
+  await save();
+  await sp.goto(BASE + "/shop/" + slug);
+  check("CR-007 shoppers see the owner's Materials & care (blank lines dropped)", (await sp.locator("main li", { hasText: /^Brass frame$|^Hand wash only$/ }).count()) === 2);
+  check("CR-007 shoppers see the maker line", (await sp.getByText("Cast by Ines in the studio's back room").count()) === 1);
+  const card = sp.getByTestId("specifications");
+  check("CR-007 Specifications is its own card under Materials & care", (await card.getByRole("heading", { name: "Specifications" }).count()) === 1 && (await card.locator("li").count()) === 7);
+  const above = await sp.getByRole("heading", { name: "Materials & care" }).boundingBox();
+  const below = await card.boundingBox();
+  check("CR-007 Specifications sits below Materials & care", above.y < below.y);
+  const link = card.getByRole("link", { name: "Candle care guide" });
+  check("E-038 https link opens in a new tab", (await link.getAttribute("href")) === "https://example.com/candle-care" && (await link.getAttribute("target")) === "_blank" && /noopener/.test((await link.getAttribute("rel")) ?? ""));
+  check("E-038 javascript: and mailto: links are plain text", (await card.getByRole("link").count()) === 1 && (await card.getByText("[Bad one](javascript:alert(1)) stays text").count()) === 1 && (await card.getByText("[Mail us](mailto:a@b.example) too").count()) === 1);
+  check("CR-007 no other formatting is applied", (await card.getByText("**not bold** <b>not html</b>").count()) === 1 && (await card.locator("b, strong").count()) === 0);
+  await page.goto(productUrl);
+  check("CR-007 the form shows what was saved", (await page.getByLabel("Maker line").inputValue()).startsWith("Cast by Ines") && (await page.getByLabel("Materials & care").inputValue()) === "Brass frame\nHand wash only");
+
+  // clearing them again hides the card and the line
+  await page.getByLabel("Specifications").fill("");
+  await page.getByLabel("Maker line").fill("");
+  await save();
+  await sp.goto(BASE + "/shop/" + slug);
+  check("E-039 clearing specifications and the maker line hides both", (await sp.getByRole("heading", { name: "Specifications" }).count()) === 0 && (await sp.locator("main p.italic").count()) === 0);
+
+  // ---------------------------------------------------------------- stock messages in the cart and at checkout
+  const lines = sp.locator("section[aria-label='Items in your cart'] > ul > li");
+  const qty = (l) => l.locator("span.tabular-nums").first();
+  await sp.evaluate(() => localStorage.clear());
+  await setStock(3);
+  await sp.goto(BASE + "/shop/" + slug);
+  await sp.getByRole("button", { name: /Add to cart/ }).click();
+  await sp.getByText("Added to your cart").waitFor();
+  await sp.goto(BASE + "/cart");
+  let line = lines.first();
+  await line.waitFor();
+  await line.getByRole("button", { name: /Increase/ }).click();
+  await line.getByRole("button", { name: /Increase/ }).click();
+  await sp.waitForFunction(() => [...document.querySelectorAll("button")].some((b) => /Increase/.test(b.getAttribute("aria-label") ?? "") && b.disabled));
+  check("E-037 quantity stepper stops at stock (3 of 3)", (await qty(line).textContent()) === "3" && (await line.getByRole("button", { name: /Increase/ }).isDisabled()));
+  check("E-037 no stock notice while the cart is within stock", (await sp.getByTestId("stock-notice").count()) === 0);
+
+  await setStock(2);
+  await sp.reload();
+  await lines.first().waitFor();
+  const notice = sp.getByTestId("stock-notice");
+  await notice.waitFor();
+  check("E-037 cart line above stock shows how many are available", /Only 2 available/.test((await notice.textContent()) ?? ""));
+  await sp.getByRole("button", { name: "Change to 2", exact: true }).click();
+  check("E-037 Change to N sets the quantity and clears the notice", (await qty(lines.first()).textContent()) === "2" && (await sp.getByTestId("stock-notice").count()) === 0);
+  check("E-037 the stepper now stops at 2", await lines.first().getByRole("button", { name: /Increase/ }).isDisabled());
+
+  // checkout: a stock limit is not 'no longer available'
+  await setStock(1);
+  await sp.goto(BASE + "/checkout");
+  await sp.getByLabel("Full name").fill("Ada Okafor");
+  await sp.getByLabel("Email").fill("ada@example.com");
+  await sp.getByLabel("Street address").fill("12 Kiln Lane");
+  await sp.getByLabel("City").fill("Oakland");
+  await sp.getByLabel("State / Region").fill("CA");
+  await sp.getByLabel("Postal code").fill("94607");
+  await sp.getByRole("button", { name: "Place demo order" }).click();
+  const alert = sp.locator("main [role=alert]").first();
+  await alert.waitFor();
+  const text = ((await alert.locator("p").first().textContent()) ?? "").trim();
+  check("E-037 checkout says 'Only 1 of <name> are in stock. Lower the quantity to continue.'", text === `Only 1 of ${name} are in stock. Lower the quantity to continue.`, text);
+  check("E-037 checkout does not say 'no longer available' for a stock limit", !/no longer available/.test((await alert.textContent()) ?? ""));
+  await alert.getByRole("button", { name: "Change to 1" }).click();
+  await sp.getByRole("button", { name: "Place demo order" }).click();
+  await sp.waitForURL("**/orders/FH-*");
+  check("E-037 after lowering the quantity the order goes through", true);
+
+  // leave the lantern as the later sections expect it
+  await setStock(3);
+}
 
 // ------------------------------------------------------------------ owner-categories
 const catA = `Test Soaps ${RUN}`;

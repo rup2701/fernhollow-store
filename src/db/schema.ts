@@ -68,6 +68,8 @@ export const products = pgTable(
     description: text("description").notNull(),
     /** Materials, dimensions and care notes shown as a list. */
     details: jsonb("details").$type<string[]>().notNull().default([]),
+    /** Owner-typed bullets (CR-007). A line may hold [text](https://...) links. Empty hides the card. */
+    specifications: jsonb("specifications").$type<string[]>().notNull().default([]),
     category: text("category").notNull(),
     basePriceCents: integer("base_price_cents").notNull(),
     /** Only products available for sale appear in the shopper catalog. */

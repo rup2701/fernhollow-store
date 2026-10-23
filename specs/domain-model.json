@@ -16,14 +16,18 @@
         "slug (unique, used in the URL)",
         "status: draft or published",
         "stock count",
-        "ordered photos, the first is the cover"
+        "ordered photos, the first is the cover",
+        "materials and care list",
+        "maker line (optional)",
+        "specifications list (optional, may contain http/https links)"
       ],
       "rules": [
         "Only products available for sale should appear in the shopper catalog.",
         "A product may have configurable options or be sold as a single configuration.",
         "Personalization is available only when explicitly supported by the product.",
         "Only published products with stock appear as available to shoppers.",
-        "Editing a product never changes past orders; orders keep a snapshot of what was bought."
+        "Editing a product never changes past orders; orders keep a snapshot of what was bought.",
+        "Stock is counted per product, across all of its options. A cart that asks for more than the stock is asked to lower the quantity."
       ]
     },
     {

@@ -24,7 +24,7 @@ export default async function NewProductPage() {
           published={false}
           hasPhoto={false}
           slugLocked={false}
-          initial={{ name: "", slug: "", tagline: "", description: "", price: "", category: "", stock: "0", options: [] }}
+          initial={{ name: "", slug: "", tagline: "", description: "", price: "", category: "", stock: "0", details: "", maker: "", specifications: "", options: [] }}
         />
       </div>
     </>

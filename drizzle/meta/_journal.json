@@ -15,6 +15,13 @@
       "when": 1792705493029,
       "tag": "0001_owner_area",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792768209213,
+      "tag": "0002_simple_scarlet_witch",
+      "breakpoints": true
     }
   ]
 }

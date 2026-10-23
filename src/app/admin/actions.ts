@@ -120,6 +120,9 @@ export async function saveProduct(productId: number | null, _prev: ProductFormSt
     category: field("category"),
     stock: field("stock"),
     options: field("options") || "[]",
+    details: field("details"),
+    maker: field("maker"),
+    specifications: field("specifications"),
   };
   const intent = field("intent") || "save";
 
@@ -152,13 +155,14 @@ export async function saveProduct(productId: number | null, _prev: ProductFormSt
           name: data.name,
           tagline: data.tagline,
           description: data.description,
-          details: [],
+          details: data.details,
+          specifications: data.specifications,
           category: data.category,
           basePriceCents: data.priceCents,
           isAvailable: false,
           stock: data.stock,
           art: { kind: "vase", primary: "#d9c7a7", accent: "#5b4636", backdrop: "#efe4d2" },
-          maker: "Made in the Fernhollow studio",
+          maker: data.maker,
           sortOrder: next,
         })
         .returning();
@@ -166,7 +170,7 @@ export async function saveProduct(productId: number | null, _prev: ProductFormSt
     } else {
       await tx
         .update(schema.products)
-        .set({ slug: data.slug, name: data.name, tagline: data.tagline, description: data.description, category: data.category, basePriceCents: data.priceCents, stock: data.stock })
+        .set({ slug: data.slug, name: data.name, tagline: data.tagline, description: data.description, category: data.category, basePriceCents: data.priceCents, stock: data.stock, details: data.details, maker: data.maker, specifications: data.specifications })
         .where(eq(schema.products.id, id));
     }
     await syncOptions(tx, id, options);

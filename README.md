@@ -29,7 +29,7 @@ Open `/admin`. There is no link to it from the store.
 2. Photos: in development they are saved to `.uploads/` and need no setup. On Vercel, add a **Blob** store to the project (Storage tab). It sets `BLOB_READ_WRITE_TOKEN` for you. **A deployed build with no storage refuses to start**, by design, so uploads are never lost.
 3. Sign in, add products, upload photos, publish.
 
-What the owner can do: sign in, see all products (search, filter by category or status), create and edit a product with options, upload up to 8 photos per product (cover, order, alt text), publish or unpublish, set stock, and manage categories. Drafts are hidden from shoppers; the owner can preview them.
+What the owner can do: sign in, see all products (search, filter by category or status), create and edit a product with options, upload up to 8 photos per product (cover, order, alt text), publish or unpublish, set stock, and manage categories. The product form edits everything the product page shows: description, Materials & care, the maker line and Specifications (one item per line; `[text](https://...)` makes a link). Drafts are hidden from shoppers; the owner can preview them.
 
 ## Scripts
 
@@ -52,7 +52,7 @@ Browser tests live in `e2e/` and check the acceptance criteria from `specs/requi
 - `e2e/change-requests.mjs`: CR-001 returns page and CR-002 footer, help and contact (32 checks)
 - `e2e/edges.mjs`: the tested entries in `specs/edges.json` (11 checks)
 - `e2e/layout.mjs`: CR-003 full width and CR-004 image-first cards (21 checks)
-- `e2e/admin.mjs`: CR-006 owner area (73 checks). Needs `OWNER_EMAIL` and `OWNER_PASSWORD` (the plain password) in the environment, and creates test products and categories in your database
+- `e2e/admin.mjs`: CR-006 owner area and CR-007 product-page content and stock messages (101 checks). Needs `OWNER_EMAIL` and `OWNER_PASSWORD` (the plain password) in the environment, and creates test products and categories in your database
 
 ```bash
 npm run test:e2e:install   # one time: downloads Playwright's Chromium
@@ -75,6 +75,8 @@ src/app/admin/              Owner area: sign-in, products, categories, photo upl
 src/lib/owner-auth.ts       Owner sign-in, signed session cookie, lockout after 5 failures
 src/lib/storage/            Photo storage adapter: local disk (dev) or Vercel Blob (deployed)
 src/lib/admin/              Owner-area validation and queries
+src/lib/spec-lines.ts       Owner-typed lists and the one allowed link format (http/https only)
+src/lib/stock.ts            How many of a cart line the stock allows (stock is per product)
 src/components/cart/        Cart state (localStorage), cart page, line items
 src/components/product-art.tsx  Code-drawn product illustrations (no stock photos)
 specs/                      The four input spec files

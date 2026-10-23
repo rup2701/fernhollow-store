@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { SLUG_PATTERN } from "@/lib/slug";
+import { LIST_LIMITS, linesFromText } from "@/lib/spec-lines";
 
 export const LIMITS = { name: 80, description: 2000, tagline: 120, photos: 8, photoBytes: 5 * 1024 * 1024, softWidth: 800 };
 
@@ -54,7 +55,18 @@ export type ProductFields = {
   priceCents: number;
   category: string;
   stock: number;
+  details: string[];
+  maker: string;
+  specifications: string[];
 };
+
+function checkList(text: string, label: string): { lines: string[]; error?: string } {
+  const lines = linesFromText(text);
+  if (lines.length > LIST_LIMITS.lines) return { lines, error: `${label} can have ${LIST_LIMITS.lines} lines at most (now ${lines.length}).` };
+  const longest = lines.findIndex((l) => l.length > LIST_LIMITS.lineLength);
+  if (longest >= 0) return { lines, error: `Keep each line of ${label} to ${LIST_LIMITS.lineLength} characters or fewer (line ${longest + 1} has ${lines[longest].length}).` };
+  return { lines };
+}
 
 /** Validate the plain fields. Option errors are returned under "options". */
 export function validateProductFields(
@@ -88,6 +100,13 @@ export function validateProductFields(
   const stock = Number(stockText);
   if (stockText === "" || !Number.isInteger(stock) || stock < 0 || stock > 100000) errors.stock = "Stock must be a whole number, 0 or more.";
 
+  const detailsChecked = checkList(raw.details ?? "", "Materials & care");
+  if (detailsChecked.error) errors.details = detailsChecked.error;
+  const specsChecked = checkList(raw.specifications ?? "", "Specifications");
+  if (specsChecked.error) errors.specifications = specsChecked.error;
+  const maker = (raw.maker ?? "").trim();
+  if (maker.length > LIST_LIMITS.maker) errors.maker = `Keep the maker line to ${LIST_LIMITS.maker} characters or fewer.`;
+
   let options: OptionsInput = [];
   try {
     const parsed = optionsSchema.safeParse(JSON.parse(raw.options || "[]"));
@@ -109,5 +128,5 @@ export function validateProductFields(
   }
 
   if (Object.keys(errors).length) return { ok: false, errors };
-  return { ok: true, data: { name, slug, tagline, description, priceCents: priceCents!, category: raw.category, stock }, options };
+  return { ok: true, data: { name, slug, tagline, description, priceCents: priceCents!, category: raw.category, stock, details: detailsChecked.lines, maker, specifications: specsChecked.lines }, options };
 }

@@ -25,7 +25,7 @@ export default async function ProductPage({ params }: Params) {
   if (!product || (!product.isAvailable && !owner)) notFound();
 
   return (
-    <Container wide className="py-6 sm:py-8">
+    <Container  className="py-6 sm:py-8">
       {!product.isAvailable ? (
         <p role="status" className="mb-4 rounded-xl border border-clay/30 bg-paper-deep px-4 py-3 text-sm font-medium">
           Draft preview. Only you can see this page.{" "}
